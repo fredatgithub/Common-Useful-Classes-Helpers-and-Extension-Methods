@@ -1,6 +1,6 @@
 ﻿using Microsoft.Windows.ApplicationModel.Resources;
 
-namespace SettingsUI.Helpers;
+namespace WinUICommunity.Common.Helpers;
 
 public static class ResourceHelper
 {

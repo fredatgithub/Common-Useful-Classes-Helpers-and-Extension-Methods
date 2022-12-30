@@ -1,6 +1,6 @@
 ﻿using Microsoft.UI.Xaml.Documents;
 
-namespace SettingsUI.Tools;
+namespace WinUICommunity.Common.Tools;
 
 public partial class Localizer
 {

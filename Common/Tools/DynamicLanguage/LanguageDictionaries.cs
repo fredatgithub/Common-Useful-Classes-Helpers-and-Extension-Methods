@@ -1,4 +1,4 @@
-﻿namespace SettingsUI.Tools;
+﻿namespace WinUICommunity.Common.Tools;
 
 public record StringResource(string Key, string DependencyPropertyName, string Value);
 

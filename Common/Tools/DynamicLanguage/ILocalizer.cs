@@ -1,4 +1,4 @@
-﻿namespace SettingsUI.Tools;
+﻿namespace WinUICommunity.Common.Tools;
 
 public interface ILocalizer
 {

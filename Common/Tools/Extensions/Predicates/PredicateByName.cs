@@ -1,4 +1,4 @@
-﻿namespace SettingsUI.Extensions;
+﻿namespace WinUICommunity.Common.Extensions;
 
 /// <summary>
 /// An <see cref="IPredicate{T}"/> type matching <see cref="FrameworkElement"/> instances by name.

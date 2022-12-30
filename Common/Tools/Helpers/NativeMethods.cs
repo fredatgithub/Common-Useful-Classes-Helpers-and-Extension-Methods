@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 
-namespace SettingsUI.Helpers;
+namespace WinUICommunity.Common.Helpers;
 internal static class NativeMethods
 {
     [DllImport("user32.dll", SetLastError = true)]

@@ -1,4 +1,4 @@
-﻿namespace SettingsUI.Helpers;
+﻿namespace WinUICommunity.Common.Helpers;
 public static partial class WindowHelper
 {
     private static NativeMethods.WinProc newWndProc = null;

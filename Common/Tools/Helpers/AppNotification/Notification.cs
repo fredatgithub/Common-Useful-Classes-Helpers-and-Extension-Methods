@@ -1,4 +1,4 @@
-﻿namespace SettingsUI.Helpers;
+﻿namespace WinUICommunity.Common.Helpers;
 public struct Notification
 {
     public string Originator;

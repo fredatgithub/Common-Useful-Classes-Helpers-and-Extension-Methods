@@ -1,4 +1,4 @@
-﻿namespace SettingsUI.Extensions;
+﻿namespace WinUICommunity.Common.Extensions;
 
 #nullable enable
 

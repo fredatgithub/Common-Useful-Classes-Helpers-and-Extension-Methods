@@ -1,6 +1,6 @@
 ﻿using Microsoft.Windows.AppNotifications;
 
-namespace SettingsUI.Helpers;
+namespace WinUICommunity.Common.Helpers;
 public interface IScenario
 {
     public int ScenarioId { get; set; }

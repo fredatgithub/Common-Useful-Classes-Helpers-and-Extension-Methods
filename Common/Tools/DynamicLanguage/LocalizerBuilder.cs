@@ -1,6 +1,6 @@
 ﻿using System.Xml;
 
-namespace SettingsUI.Tools;
+namespace WinUICommunity.Common.Tools;
 
 public class LocalizerBuilder
 {

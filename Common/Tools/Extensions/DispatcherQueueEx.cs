@@ -1,5 +1,5 @@
 ﻿#if WINDOWS10_0_19041_0_OR_GREATER
-namespace SettingsUI.Extensions;
+namespace WinUICommunity.Common.Extensions;
 /// <summary>
 /// Helpers for executing code in a <see cref="DispatcherQueue"/>.
 /// </summary>

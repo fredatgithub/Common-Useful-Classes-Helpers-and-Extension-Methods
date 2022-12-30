@@ -1,4 +1,4 @@
-﻿namespace SettingsUI.Helpers;
+﻿namespace WinUICommunity.Common.Helpers;
 
 public enum TaskbarStates
 {

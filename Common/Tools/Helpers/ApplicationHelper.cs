@@ -1,4 +1,4 @@
-﻿namespace SettingsUI.Helpers;
+﻿namespace WinUICommunity.Common.Helpers;
 public static class ApplicationHelper
 {
     private const uint APPMODEL_ERROR_NO_PACKAGE = 15700;

@@ -1,6 +1,6 @@
 ﻿using WinRT; // required to support Window.As<ICompositionSupportsSystemBackdrop>()
 
-namespace SettingsUI.Helpers;
+namespace WinUICommunity.Common.Helpers;
 public class SystemBackdropsHelper
 {
     private Window window;

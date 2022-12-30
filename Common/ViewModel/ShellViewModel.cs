@@ -1,5 +1,5 @@
 ﻿using Microsoft.UI.Xaml.Input;
-using SettingsUI.Tools;
+using WinUICommunity.Common.Tools;
 
 namespace SettingsUI.ViewModel;
 

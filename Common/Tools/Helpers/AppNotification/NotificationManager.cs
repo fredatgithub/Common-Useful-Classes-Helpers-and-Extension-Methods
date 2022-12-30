@@ -1,7 +1,7 @@
 ﻿using Microsoft.Windows.AppLifecycle;
 using Microsoft.Windows.AppNotifications;
 
-namespace SettingsUI.Helpers;
+namespace WinUICommunity.Common.Helpers;
 public class NotificationManager
 {
     private Action<string> _onNotificationInvoked;

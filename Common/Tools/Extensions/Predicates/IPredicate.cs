@@ -1,4 +1,4 @@
-﻿namespace SettingsUI.Extensions;
+﻿namespace WinUICommunity.Common.Extensions;
 
 /// <summary>
 /// An interface representing a predicate for items of a given type.

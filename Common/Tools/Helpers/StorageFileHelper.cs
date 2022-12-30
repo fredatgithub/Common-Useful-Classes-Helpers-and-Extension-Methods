@@ -5,7 +5,7 @@ using Windows.ApplicationModel;
 using Windows.Storage.Search;
 using Windows.Storage.Streams;
 
-namespace SettingsUI.Helpers;
+namespace WinUICommunity.Common.Helpers;
 
 /// <summary>
 /// This class provides static helper methods for <see cref="StorageFile" />.
