@@ -1,7 +1,7 @@
 ﻿using Microsoft.UI.Xaml.Input;
 using WinUICommunity.Common.Tools;
 
-namespace SettingsUI.ViewModel;
+namespace WinUICommunity.Common.ViewModel;
 
 public class ShellViewModel : Observable
 {

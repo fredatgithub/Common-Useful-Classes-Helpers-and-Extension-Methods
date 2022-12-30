@@ -14,7 +14,7 @@ global using System.ComponentModel;
 global using System.Windows.Input;
 global using Microsoft.UI.Xaml.Navigation;
 global using WinUICommunity.Common.Helpers;
-global using SettingsUI.Services;
+global using WinUICommunity.Common.Services;
 global using SettingsUI.Extensions;
 global using WinUICommunity.Common.Tools;
 global using Windows.System;

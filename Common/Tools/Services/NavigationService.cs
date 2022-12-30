@@ -4,7 +4,7 @@
 
 using Microsoft.UI.Xaml.Media.Animation;
 
-namespace SettingsUI.Services;
+namespace WinUICommunity.Common.Services;
 
 public static class NavigationService
 {
