@@ -31,7 +31,4 @@
 		<PackageReference Include="nucs.JsonSettings" Version="2.0.0-alpha7" />
 		<PackageReference Include="nucs.JsonSettings.Autosave" Version="2.0.0-alpha7" />
 	</ItemGroup>
-	<ItemGroup>
-	  <Folder Include="Tools\Helpers\Theme\" />
-	</ItemGroup>
 </Project>
