@@ -37,8 +37,8 @@
 Install-Package WinUICommunity.Common
 ```
 
-See the  app to see how to use it
-Demo [Demo](https://github.com/WinUICommunity/SettingsUI/)
+See the [Demo](https://github.com/winUICommunity/DemoApp) app to see how to use it
+
 
 ## Documentation
 
