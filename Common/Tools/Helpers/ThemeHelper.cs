@@ -238,10 +238,10 @@ public static class ThemeHelper
     }
 
     /// <summary>
-    /// Use This Method in RadioButtonChecked event
+    /// Use This Method in RadioButton Checked event
     /// </summary>
     /// <param name="sender"></param>
-    public static void OnThemeRadioButtonChecked(object sender)
+    public static void OnRadioButtonChecked(object sender)
     {
         var selectedTheme = ((RadioButton) sender)?.Tag?.ToString();
         if (selectedTheme != null)
@@ -254,9 +254,34 @@ public static class ThemeHelper
     /// Use This Method in Loaded event of a Page, if you want to Set RadioButton default value.
     /// </summary>
     /// <param name="ThemePanel">The panel (Grid/StackPanel) that contains the RadioButton</param>
-    public static void SetThemeRadioButtonChecked(Panel ThemePanel)
+    public static void SetRadioButtonDefaultItem(Panel ThemePanel)
     {
         var currentTheme = RootTheme.ToString();
         (ThemePanel.Children.Cast<RadioButton>().FirstOrDefault(c => c?.Tag?.ToString() == currentTheme)).IsChecked = true;
+    }
+
+    /// <summary>
+    /// Use This Method in ComboBox SelectionChanged event
+    /// </summary>
+    /// <param name="sender"></param>
+    public static void ComboBoxSelectionChanged(object sender)
+    {
+        var cmb = ((ComboBox)sender);
+        var selectedTheme = (cmb?.SelectedItem as ComboBoxItem)?.Tag?.ToString();
+        if (selectedTheme != null)
+        {
+            RootTheme = GeneralHelper.GetEnum<ElementTheme>(selectedTheme);
+        }
+    }
+
+    /// <summary>
+    /// Use This Method in Loaded event of a Page, if you want to Set ComboBox default value.
+    /// </summary>
+    /// <param name="themeComboBox"></param>
+    public static void SetComboBoxDefaultItem(ComboBox themeComboBox)
+    {
+        var currentTheme = RootTheme.ToString();
+        var item = (themeComboBox.Items.Cast<ComboBoxItem>().FirstOrDefault(c => c?.Tag?.ToString() == currentTheme));
+        themeComboBox.SelectedItem = item;
     }
 }
