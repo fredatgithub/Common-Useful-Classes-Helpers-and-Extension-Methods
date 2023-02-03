@@ -7,7 +7,7 @@
 		<UseWinUI>true</UseWinUI>
 		<ImplicitUsings>true</ImplicitUsings>
 		<NoWarn>CS8632;CS0067;CA1416</NoWarn>
-		<Version>3.0.1</Version>
+		<Version>3.0.3</Version>
 		<Copyright>Copyright (c) 2021-2023 Mahdi Hosseini</Copyright>
 		<Description>useful helpers, extension methods and classes</Description>
 		<GeneratePackageOnBuild>False</GeneratePackageOnBuild>
@@ -26,9 +26,9 @@
 		<None Include="..\README.md" Pack="true" PackagePath="" />
 	</ItemGroup>
 	<ItemGroup>
-		<PackageReference Include="Microsoft.WindowsAppSDK" Version="1.2.221209.1" />
+		<PackageReference Include="Microsoft.WindowsAppSDK" Version="1.2.230118.102" />
 		<PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.22621.755" />
-		<PackageReference Include="nucs.JsonSettings" Version="2.0.0-alpha7" />
-		<PackageReference Include="nucs.JsonSettings.Autosave" Version="2.0.0-alpha7" />
+		<PackageReference Include="nucs.JsonSettings" Version="2.0.1" />
+		<PackageReference Include="nucs.JsonSettings.Autosave" Version="2.0.1" />
 	</ItemGroup>
 </Project>
