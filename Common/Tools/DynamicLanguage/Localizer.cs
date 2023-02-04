@@ -1,129 +1,225 @@
-﻿using Microsoft.UI.Xaml.Documents;
-
 namespace WinUICommunity.Common.Tools;
 
-public partial class Localizer : DependencyObject, ILocalizer
+public sealed partial class Localizer : ILocalizer, IDisposable
 {
-    private readonly HashSet<UIElement> rootElements = new();
+    public static readonly DependencyProperty UidProperty = DependencyProperty.RegisterAttached(
+        "Uid",
+        typeof(string),
+        typeof(Localizer),
+        new PropertyMetadata(default));
 
-    internal Localizer()
+    /// <summary>
+    /// This static event is meant only for the Localizer 
+    /// so it can have access to DependencyObjects with Uid.
+    /// </summary>
+    internal static event EventHandler<DependencyObject>? DependencyObjectUidSet;
+
+    public static string GetUid(DependencyObject dependencyObject)
     {
+        return (string)dependencyObject.GetValue(UidProperty);
+    }
+
+    public static void SetUid(DependencyObject dependencyObject, string uid)
+    {
+        dependencyObject.SetValue(UidProperty, uid);
+        DependencyObjectUidSet?.Invoke(null, dependencyObject);
+    }
+
+    private readonly Options options;
+
+    private readonly DependencyObjectWeakReferences dependencyObjectsReferences = new();
+
+    private readonly Dictionary<string, LanguageDictionary> languageDictionaries = new();
+
+    private readonly List<LocalizationActions.ActionItem> localizationActions = new();
+
+    internal Localizer(Options options)
+    {
+        this.options = options;
+
+        if (this.options.DisableDefaultLocalizationActions is false)
+        {
+            this.localizationActions = LocalizationActions.DefaultActions;
+        }
+
+        DependencyObjectUidSet += Uids_DependencyObjectUidSet; ;
     }
 
     public event EventHandler<LanguageChangedEventArgs>? LanguageChanged;
 
-    internal static ILocalizer Instance { get; set; } = EmptyLocalizer.Instance;
+    private static ILocalizer Instance { get; set; } = NullLocalizer.Instance;
 
-    private LanguageDictionaries LanguageDictionaries { get; set; } = new();
+    private bool IsDisposed { get; set; }
 
-    private string CurrentLanguage { get; set; } = "en-US";
+    private LanguageDictionary CurrentDictionary { get; set; } = new("");
 
     public static ILocalizer Get() => Instance;
 
-    public static void Set(ILocalizer localizer) => Instance = localizer;
-
-    public IEnumerable<string> GetAvailableLanguages() => LanguageDictionaries.AvailableLanguages;
-
-    public string GetCurrentLanguage() => CurrentLanguage;
-
-    /// <summary>
-    /// You need to Initialize Window with 2 parameters
-    /// </summary>
-    /// <param name="Root">Grid/StackPanel or any FrameworkElement that hosts elements</param>
-    /// <param name="Content">Windows `Content` Properties</param>
-    public void InitializeWindow(FrameworkElement Root, UIElement Content)
+    public IEnumerable<string> GetAvailableLanguages()
     {
-        RunLocalizationOnRegisteredRootElements();
-        RunLocalization(Root);
-        if (Content is FrameworkElement content)
+        try
         {
-            RegisterRootElement(content);
+            return this.languageDictionaries
+                .Values
+                .Select(x => x.Language)
+                .ToArray();
         }
-    }
-
-    public IEnumerable<string> GetLocalizedStrings(string key)
-    {
-        if (LanguageDictionaries.TryGetDictionary(
-            CurrentLanguage,
-            out LanguageDictionary? languageDictionary) is true &&
-            languageDictionary is not null)
+        catch (LocalizerException)
         {
-            return languageDictionary
-                .Where(x => x.Key == key)
-                .Select(x => x.Value);
+            throw;
+        }
+        catch (Exception exception)
+        {
+            ThrowLocalizerException(exception, "Failed to get available languages.");
         }
 
-        return Enumerable.Empty<string>();
+        return Array.Empty<string>();
     }
 
-    public void SetLanguage(string language)
-    {
-        if (GetAvailableLanguages().Contains(language) is true)
-        {
-            CurrentLanguage = language;
-            RunLocalizationOnRegisteredRootElements();
+    public string GetCurrentLanguage() => CurrentDictionary.Language;
 
-            LanguageChanged?.Invoke(this, new LanguageChangedEventArgs(CurrentLanguage));
+    public async Task SetLanguage(string language)
+    {
+        string previousLanguage = CurrentDictionary.Language;
+
+        try
+        {
+            if (this.languageDictionaries.TryGetValue(
+                language,
+                out LanguageDictionary? dictionary) is true &&
+                dictionary is not null)
+            {
+                CurrentDictionary = dictionary;
+                await LocalizeDependencyObjects();
+                OnLanguageChanged(previousLanguage, CurrentDictionary.Language);
+                return;
+            }
+        }
+        catch (LocalizerException)
+        {
+            throw;
+        }
+        catch (Exception exception)
+        {
+            ThrowLocalizerException(exception, "Exception setting language. [{PreviousLanguage} -> {NextLanguage}]", previousLanguage, language);
+        }
+
+        ThrowLocalizerException(innerException: null, "Failed to set language. [{PreviousLanguage} -> {NextLanguage}]", previousLanguage, language);
+        return;
+    }
+
+    public string GetLocalizedString(string uid)
+    {
+        try
+        {
+            if (this.languageDictionaries.TryGetValue(
+                GetCurrentLanguage(),
+                out LanguageDictionary? dictionary) is true &&
+                dictionary?.TryGetItems(
+                    uid,
+                    out LanguageDictionary.Items? items) is true &&
+                    items.LastOrDefault() is LanguageDictionary.Item item)
+            {
+                return item.Value;
+            }
+        }
+        catch (Exception exception)
+        {
+            ThrowLocalizerException(exception, "Failed to get localized string. [Uid: {Uid}]", uid);
+        }
+
+        return this.options.UseUidWhenLocalizedStringNotFound is true
+            ? uid
+            : string.Empty;
+    }
+
+    public IEnumerable<string> GetLocalizedStrings(string uid)
+    {
+        try
+        {
+            if (this.languageDictionaries.TryGetValue(
+                GetCurrentLanguage(),
+                out LanguageDictionary? dictionary) is true &&
+                dictionary?.TryGetItems(
+                    uid,
+                    out LanguageDictionary.Items? items) is true)
+            {
+                return items.Select(x => x.Value);
+            }
+        }
+        catch (Exception exception)
+        {
+            ThrowLocalizerException(exception, "Failed to get localized string. [Uid: {Uid}]", uid);
+        }
+
+        return this.options.UseUidWhenLocalizedStringNotFound is true
+            ? new string[] { uid }
+            : Array.Empty<string>();
+    }
+
+    public LanguageDictionary GetCurrentLanguageDictionary() => CurrentDictionary;
+
+    public IEnumerable<LanguageDictionary> GetLanguageDictionaries() => this.languageDictionaries.Values;
+
+    public void Dispose()
+    {
+        Dispose(isDisposing: true);
+        GC.SuppressFinalize(this);
+    }
+
+    internal static void Set(ILocalizer localizer) => Instance = localizer;
+
+    internal void AddLanguageDictionary(LanguageDictionary languageDictionary)
+    {
+        if (this.languageDictionaries.TryGetValue(
+            languageDictionary.Language,
+            out LanguageDictionary? targetDictionary) is true)
+        {
+            int previousItemsCount = targetDictionary.GetItemsCount();
+
+            foreach (LanguageDictionary.Item item in languageDictionary.GetItems())
+            {
+                targetDictionary.AddItem(item);
+            }
 
             return;
         }
 
-        throw new NotImplementedException($"{language} is not available.");
-    }
+        LanguageDictionary newDictionary = new(languageDictionary.Language);
 
-    public void RegisterRootElement(FrameworkElement rootElement, bool runLocalization = false)
-    {
-        rootElement.Loaded -= RootElement_Loaded;
-        rootElement.Unloaded -= RootElement_Unloaded;
-        rootElement.Loaded += RootElement_Loaded;
-        rootElement.Unloaded += RootElement_Unloaded;
-
-        _ = this.rootElements.Add(rootElement);
-
-        if (runLocalization is true)
+        foreach (LanguageDictionary.Item item in languageDictionary.GetItems())
         {
-            RunLocalization(rootElement);
+            newDictionary.AddItem(item);
         }
+
+        this.languageDictionaries.Add(newDictionary.Language, newDictionary);
     }
 
-    public void RunLocalizationOnRegisteredRootElements()
+    internal void AddLocalizationAction(LocalizationActions.ActionItem item)
     {
-        foreach (FrameworkElement rootElement in this.rootElements.OfType<FrameworkElement>())
-        {
-            RunLocalization(rootElement);
-        }
+        this.localizationActions.Add(item);
     }
 
-    public void RunLocalization(FrameworkElement rootElement)
+    internal void RegisterDependencyObject(DependencyObject dependencyObject)
     {
-        if (TryGetLanguageDictionary(
-            CurrentLanguage,
-            out LanguageDictionary? languageDictionary) is true &&
-            languageDictionary is not null)
-        {
-            Localize(rootElement, languageDictionary);
-        }
+        this.dependencyObjectsReferences.Add(dependencyObject);
+        LocalizeDependencyObject(dependencyObject);
     }
 
-    public bool TryGetLanguageDictionary(string language, out LanguageDictionary? languageDictionary)
+    private static void Uids_DependencyObjectUidSet(object? sender, DependencyObject dependencyObject)
     {
-        return LanguageDictionaries.TryGetDictionary(language, out languageDictionary);
+        (Localizer.Instance as Localizer)?.RegisterDependencyObject(dependencyObject);
     }
 
-    public bool TryRegisterUIElementChildrenGetters(Type type, Func<DependencyObject, IEnumerable<DependencyObject>> func)
+    private static void ThrowLocalizerException(Exception? innerException, string message, params object?[] args)
     {
-        return this.childrenGetters.TryAdd(type, func);
+        LocalizerException localizerException = new(message, innerException);
+        throw localizerException;
     }
 
-    internal void Initialize(LanguageDictionaries languageDictionaries)
+    private static DependencyProperty? GetDependencyProperty(DependencyObject dependencyObject, string dependencyPropertyName)
     {
-        LanguageDictionaries = languageDictionaries;
-        RegisterDefaultUIElementChildrenGetters();
-    }
-
-    private static DependencyProperty? GetDependencyProperty(DependencyObject element, string dependencyPropertyName)
-    {
-        Type type = element.GetType();
+        Type type = dependencyObject.GetType();
 
         if (type.GetProperty(
             dependencyPropertyName,
@@ -143,67 +239,54 @@ public partial class Localizer : DependencyObject, ILocalizer
         return null;
     }
 
-    private void RootElement_Loaded(object sender, RoutedEventArgs e)
+    private void LocalizeDependencyObjectsWithoutDependencyProperty(DependencyObject dependencyObject, string value)
     {
-        if (sender is FrameworkElement rootElement)
+        foreach (LocalizationActions.ActionItem item in this.localizationActions
+            .Where(x => x.TargetType == dependencyObject.GetType()))
         {
-            RunLocalization(rootElement);
+            item.Action(new LocalizationActions.ActionArguments(dependencyObject, value));
+        }
+    }
+    private async Task LocalizeDependencyObjects()
+    {
+        foreach (DependencyObject dependencyObject in await this.dependencyObjectsReferences.GetDependencyObjects())
+        {
+            LocalizeDependencyObject(dependencyObject);
         }
     }
 
-    private void RootElement_Unloaded(object sender, RoutedEventArgs e)
+    private void LocalizeDependencyObject(DependencyObject dependencyObject)
     {
-        if (sender is FrameworkElement rootElement)
+        if (GetUid(dependencyObject) is string uid &&
+            CurrentDictionary.TryGetItems(uid, out LanguageDictionary.Items? items) is true)
         {
-            _ = this.rootElements.Remove(rootElement);
-        }
-    }
-
-    private void Localize(DependencyObject element, LanguageDictionary languageDictionary)
-    {
-        if (GetUid(element) is string uid)
-        {
-            foreach (StringResource resource in languageDictionary.Where(x => x.Key == uid))
+            foreach (LanguageDictionary.Item item in items)
             {
                 if (GetDependencyProperty(
-                    element,
-                    resource.DependencyPropertyName) is DependencyProperty dependencyProperty)
+                    dependencyObject,
+                    item.DependencyPropertyName) is DependencyProperty dependencyProperty)
                 {
-                    element.SetValue(dependencyProperty, resource.Value);
+                    dependencyObject.SetValue(dependencyProperty, item.Value);
                 }
                 else
                 {
-                    _ = TryLocalizeELementsWithoutDependencyProperty(element, resource.Value);
+                    LocalizeDependencyObjectsWithoutDependencyProperty(dependencyObject, item.Value);
                 }
-            }
-        }
-
-        if (this.childrenGetters.TryGetValue(
-            element.GetType(),
-            out Func<DependencyObject, IEnumerable<DependencyObject>>? childrenGetter) is true &&
-            childrenGetter is not null)
-        {
-            foreach (DependencyObject child in childrenGetter(element)
-                .Union((element as UIElement)?.GetChildren() ?? Enumerable.Empty<DependencyObject>()))
-            {
-                Localize(child, languageDictionary);
             }
         }
     }
 
-    private bool TryLocalizeELementsWithoutDependencyProperty(DependencyObject element, string value)
+    private void OnLanguageChanged(string previousLanguage, string currentLanguage)
     {
-        if (element is Run run)
-        {
-            run.Text = value;
-            return true;
-        }
-        else if (element is Hyperlink hyperlink && hyperlink.Inlines.Count is 0)
-        {
-            hyperlink.Inlines.Add(new Run() { Text = value });
-            return true;
-        }
+        LanguageChanged?.Invoke(this, new LanguageChangedEventArgs(previousLanguage, currentLanguage));
+    }
 
-        return false;
+    private void Dispose(bool isDisposing)
+    {
+        if (IsDisposed is not true && isDisposing is true)
+        {
+            this.dependencyObjectsReferences.Dispose();
+            IsDisposed = true;
+        }
     }
 }

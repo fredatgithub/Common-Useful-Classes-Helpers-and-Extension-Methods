@@ -1,10 +1,14 @@
 ﻿namespace WinUICommunity.Common.Tools;
+
 public class LanguageChangedEventArgs : EventArgs
 {
-    public LanguageChangedEventArgs(string language)
+    public LanguageChangedEventArgs(string previousLanguage, string currentLanguage)
     {
-        Language = language;
+        PreviousLanguage = previousLanguage;
+        CurrentLanguage = currentLanguage;
     }
 
-    public string Language { get; }
+    public string PreviousLanguage { get; }
+
+    public string CurrentLanguage { get; }
 }

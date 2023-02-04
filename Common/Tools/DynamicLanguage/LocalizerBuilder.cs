@@ -1,170 +1,182 @@
-﻿using System.Xml;
+using System.Xml;
 
 namespace WinUICommunity.Common.Tools;
 
-public class LocalizerBuilder
+public partial class LocalizerBuilder
 {
-    private readonly List<Action> actions = new();
+    private record StringResourceItem(string Name, string Value, string Comment);
 
-    private readonly LanguageDictionaries languageDictionaries = new();
+    private record StringResourceItems(string Language, IEnumerable<StringResourceItem> Items);
 
-    private bool isBuilt;
+    private readonly List<Action> builderActions = new();
 
-    private string? defaultLanguage;
+    private readonly List<LanguageDictionary> languageDictionaries = new();
 
-    public LocalizerBuilder When(Func<bool> condition)
+    private readonly List<LocalizationActions.ActionItem> localizationActions = new();
+
+    private readonly Localizer.Options options = new();
+
+    public static string StringResourcesFileXPath { get; set; } = "//root/data";
+
+    public static bool IsLocalizerAlreadyBuilt => Localizer.Get() is Localizer;
+
+    public LocalizerBuilder AddStringResourcesFolderForLanguageDictionaries(
+        string stringResourcesFolderPath,
+        string resourcesFileName = "Resources.resw",
+        bool ignoreExceptions = false)
     {
-        if (condition.Invoke() is false)
+        this.builderActions.Add(() =>
         {
-            this.actions.RemoveAt(this.actions.Count - 1);
-        }
-
-        return this;
-    }
-
-    public LocalizerBuilder AddDefaultResourcesStringsFolder()
-    {
-        this.actions.Add(() =>
-        {
-            string stringsFolderPath = Path.Combine(Directory.GetCurrentDirectory(), "Strings");
-            LoadResourcesStringsFolder(new LocalizerResourcesStringsFolder(stringsFolderPath));
-        });
-
-        return this;
-    }
-
-    public LocalizerBuilder AddResourcesStringsFolder(LocalizerResourcesStringsFolder resourcesStringsFolder)
-    {
-        this.actions.Add(() =>
-        {
-            LoadResourcesStringsFolder(resourcesStringsFolder);
-        });
-
-        return this;
-    }
-
-    public LocalizerBuilder AddResourcesStringsFolders(IEnumerable<LocalizerResourcesStringsFolder> resourcesStringsFolders)
-    {
-        this.actions.Add(() =>
-        {
-            foreach (LocalizerResourcesStringsFolder stringsFolder in resourcesStringsFolders)
+            foreach (string languageFolderPath in Directory.GetDirectories(stringResourcesFolderPath))
             {
-                LoadResourcesStringsFolder(stringsFolder);
+                try
+                {
+                    string languageFilePath = Path.Combine(languageFolderPath, resourcesFileName);
+
+                    if (CreateLanguageDictionaryFromStringResourcesFile(
+                        languageFilePath,
+                        StringResourcesFileXPath) is LanguageDictionary dictionary)
+                    {
+                        this.languageDictionaries.Add(dictionary);
+                    }
+                }
+                catch
+                {
+                    if (ignoreExceptions is false)
+                    {
+                        throw;
+                    }
+                }
             }
         });
 
         return this;
     }
 
-    public LocalizerBuilder AddLanguageDictionary(LanguageDictionary languageDictionary)
+    public LocalizerBuilder AddLanguageDictionary(LanguageDictionary dictionary)
     {
-        this.actions.Add(() =>
-        {
-            this.languageDictionaries.AppendDictionary(languageDictionary);
-        });
-
+        this.builderActions.Add(() => this.languageDictionaries.Add(dictionary));
         return this;
     }
 
-    public LocalizerBuilder AddLanguageDictionaries(IEnumerable<LanguageDictionary> languageDictionaries)
+    public LocalizerBuilder AddLocalizationAction(LocalizationActions.ActionItem item)
     {
-        this.actions.Add(() =>
-        {
-            foreach (LanguageDictionary languageDictionary in languageDictionaries)
-            {
-                this.languageDictionaries.AppendDictionary(languageDictionary);
-            }
-        });
-
+        this.localizationActions.Add(item);
         return this;
     }
 
-    public LocalizerBuilder SetDefaultLanguage(string language)
+    public LocalizerBuilder SetOptions(Action<Localizer.Options>? options)
     {
-        this.defaultLanguage = language;
+        options?.Invoke(this.options);
         return this;
     }
 
-    public ILocalizer Build()
+    public async Task<ILocalizer> Build()
     {
-        if (this.isBuilt is true)
+        if (IsLocalizerAlreadyBuilt is true)
         {
-            throw new InvalidOperationException("This Localizer.Builder is already built.");
+            throw new LocalizerException($"{nameof(Localizer)} is already built.");
         }
 
-        foreach (Action action in this.actions)
+        Localizer localizer = new(this.options);
+
+        foreach (Action action in this.builderActions)
         {
             action.Invoke();
         }
 
-        Localizer localizer = new();
-        localizer.Initialize(this.languageDictionaries);
-
-        if (string.IsNullOrEmpty(this.defaultLanguage) is false)
+        foreach (LanguageDictionary dictionary in this.languageDictionaries)
         {
-            localizer.SetLanguage(this.defaultLanguage);
+            localizer.AddLanguageDictionary(dictionary);
         }
 
-        this.isBuilt = true;
+        foreach (LocalizationActions.ActionItem item in this.localizationActions)
+        {
+            localizer.AddLocalizationAction(item);
+        }
 
+        await localizer.SetLanguage(this.options.DefaultLanguage);
+
+        Localizer.Set(localizer);
         return localizer;
     }
 
-    private static StringResource? CreateStringResource(XmlNode xmlNode)
+    private static LanguageDictionary? CreateLanguageDictionaryFromStringResourcesFile(string filePath, string fileXPath)
     {
-        if (xmlNode?.Attributes?["name"]?.Value is string name &&
-            (xmlNode?["value"]?.InnerText) is string value)
+        if (CreateStringResourceItemsFromResourcesFile(
+            filePath,
+            fileXPath) is StringResourceItems stringResourceItems)
         {
-            (string Key, string DependencyPropertyName) = GetKeyAndDependencyPropertyName(name);
-            return new StringResource(Key, $"{DependencyPropertyName}Property", value);
+            return CreateLanguageDictionaryFromStringResourceItems(stringResourceItems);
         }
 
         return null;
     }
 
-    private static (string Key, string Property) GetKeyAndDependencyPropertyName(string name)
+    private static LanguageDictionary CreateLanguageDictionaryFromStringResourceItems(StringResourceItems stringResourceItems)
     {
-        return name.LastIndexOf(".") is int lastSeparatorIndex &&
-            lastSeparatorIndex > 1
-                ? (name[..lastSeparatorIndex], name[(lastSeparatorIndex + 1)..])
-                : (name, string.Empty);
-    }
+        LanguageDictionary dictionary = new(stringResourceItems.Language);
 
-    private void LoadResourcesStringsFolder(LocalizerResourcesStringsFolder resourcesStringsFolder)
-    {
-        foreach (string folder in Directory.GetDirectories(resourcesStringsFolder.StringsFolderPath))
+        foreach (StringResourceItem stringResourceItem in stringResourceItems.Items)
         {
-            string languageFilePath = Path.Combine(folder, resourcesStringsFolder.ResourcesFileName);
-            DirectoryInfo directoryInfo = new(languageFilePath);
-
-            if (directoryInfo.Parent?.Name is string languageKey &&
-                CreateLanguageDictionaryFromLanguageResources(
-                    languageKey,
-                    languageFilePath) is LanguageDictionary languageDictionary)
-            {
-                this.languageDictionaries.AppendDictionary(languageDictionary);
-            }
+            LanguageDictionary.Item item = CreateLanguageDictionaryItem(stringResourceItem);
+            dictionary.AddItem(item);
         }
+
+        return dictionary;
     }
 
-    private LanguageDictionary CreateLanguageDictionaryFromLanguageResources(string languageKey, string resourceFilePath)
+    private static LanguageDictionary.Item CreateLanguageDictionaryItem(StringResourceItem stringResourceItem)
     {
-        LanguageDictionary languageDictionary = new(languageKey);
+        string name = stringResourceItem.Name;
+        (string Uid, string DependencyPropertyName) = name.LastIndexOf(".") is int lastSeparatorIndex && lastSeparatorIndex > 1
+            ? (name[..lastSeparatorIndex], string.Concat(name.AsSpan(lastSeparatorIndex + 1), "Property"))
+            : (name, string.Empty);
+        return new LanguageDictionary.Item(
+            Uid,
+            DependencyPropertyName,
+            stringResourceItem.Value,
+            stringResourceItem.Name);
+    }
 
-        XmlDocument xmlDoc = new();
-        xmlDoc.Load(resourceFilePath);
+    private static StringResourceItems? CreateStringResourceItemsFromResourcesFile(string filePath, string xPath = "//root/data")
+    {
+        DirectoryInfo directoryInfo = new(filePath);
 
-        if (xmlDoc.SelectNodes("//root/data") is XmlNodeList nodeList)
+        if (directoryInfo.Parent?.Name is string language)
         {
-            foreach (XmlNode node in nodeList)
+            XmlDocument document = new();
+            if (File.Exists(directoryInfo.FullName))
             {
-                if (CreateStringResource(node) is StringResource resource)
+                document.Load(directoryInfo.FullName);
+
+                if (document.SelectNodes(xPath) is XmlNodeList nodeList)
                 {
-                    languageDictionary.Add(resource);
+                    List<StringResourceItem> items = new();
+                    items.AddRange(CreateStringResourceItems(nodeList));
+                    return new StringResourceItems(language, items);
                 }
             }
         }
+        return null;
+    }
 
-        return languageDictionary;
+    private static IEnumerable<StringResourceItem> CreateStringResourceItems(XmlNodeList nodeList)
+    {
+        foreach (XmlNode node in nodeList)
+        {
+            if (CreateStringResourceItem(node) is StringResourceItem item)
+            {
+                yield return item;
+            }
+        }
+    }
+
+    private static StringResourceItem? CreateStringResourceItem(XmlNode node)
+    {
+        return new StringResourceItem(
+            Name: node.Attributes?["name"]?.Value ?? string.Empty,
+            Value: node["value"]?.InnerText ?? string.Empty,
+            Comment: string.Empty);
     }
 }
