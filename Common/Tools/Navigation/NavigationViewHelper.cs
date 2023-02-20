@@ -1,5 +1,6 @@
 ﻿using Microsoft.UI.Xaml.Automation;
 using WinUICommunity.Shared.DataModel;
+using WinUICommunity.Shared.Internal;
 
 namespace WinUICommunity.Common.Helpers;
 
