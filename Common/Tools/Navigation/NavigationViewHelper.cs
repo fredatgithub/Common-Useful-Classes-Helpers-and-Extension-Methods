@@ -205,7 +205,7 @@ public class NavigationViewHelper
             else
             {
                 // Create a single "No results found" item
-                var noResultsItem = new ControlInfoDataItem("", itemNotFoundString, "", "", itemNotFoundImage, "", "", "", "", false, false, false, false);
+                var noResultsItem = new ControlInfoDataItem("", itemNotFoundString, "", "", "", itemNotFoundImage, "", "", "", "", false, false, false, false);
 
                 // Add the item to a new list of suggestions
                 var noResultsList = new List<ControlInfoDataItem>();
