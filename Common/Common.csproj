@@ -20,6 +20,7 @@
 		<PackageTags>winui winui3 win11 xaml Common SettingsUI settings theme styles projectreunion winappsdk windowsappsdk wasdk reunion SettingsControls settingsexpander settingscard</PackageTags>
 		<PackageReleaseNotes>https://github.com/WinUICommunity/Common/releases</PackageReleaseNotes>
 	</PropertyGroup>
+
 	<ItemGroup>
 		<None Include="Assets\icon.png" Pack="true" PackagePath="" />
 		<None Include="..\LICENSE" Pack="true" PackagePath="" />
@@ -30,5 +31,9 @@
 		<PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.22621.755" />
 		<PackageReference Include="nucs.JsonSettings" Version="2.0.1" />
 		<PackageReference Include="nucs.JsonSettings.Autosave" Version="2.0.1" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\..\WinUICommunity.Shared\WinUICommunity.Shared.csproj" />
 	</ItemGroup>
 </Project>
