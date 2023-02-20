@@ -1,6 +1,6 @@
 ﻿using Microsoft.UI.Xaml.Automation;
 using WinUICommunity.Shared.DataModel;
-using WinUICommunity.Shared.Internal;
+using WinUICommunity.Shared.Navigation;
 
 namespace WinUICommunity.Common.Helpers;
 
