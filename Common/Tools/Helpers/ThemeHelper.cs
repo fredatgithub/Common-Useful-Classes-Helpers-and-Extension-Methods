@@ -168,7 +168,7 @@ public static class ThemeHelper
     private static void Initialize()
     {
         string savedTheme = string.Empty;
-        
+
         if (ApplicationHelper.IsPackaged)
         {
             savedTheme = ApplicationData.Current.LocalSettings.Values[SelectedAppThemeKey]?.ToString();
@@ -243,7 +243,7 @@ public static class ThemeHelper
     /// <param name="sender"></param>
     public static void OnRadioButtonChecked(object sender)
     {
-        var selectedTheme = ((RadioButton) sender)?.Tag?.ToString();
+        var selectedTheme = ((RadioButton)sender)?.Tag?.ToString();
         if (selectedTheme != null)
         {
             RootTheme = GeneralHelper.GetEnum<ElementTheme>(selectedTheme);

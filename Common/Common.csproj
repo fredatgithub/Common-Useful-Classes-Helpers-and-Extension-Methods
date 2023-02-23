@@ -1,39 +1,37 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-	<PropertyGroup>
-		<TargetFrameworks>net6.0-windows10.0.17763.0;net6.0-windows10.0.19041.0;net7.0-windows10.0.17763.0;net7.0-windows10.0.19041.0</TargetFrameworks>
-		<TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
-		<RuntimeIdentifiers>win10-x86;win10-x64;win10-arm64</RuntimeIdentifiers>
-		<RootNamespace>WinUICommunity.Common</RootNamespace>
-		<UseWinUI>true</UseWinUI>
-		<ImplicitUsings>true</ImplicitUsings>
-		<NoWarn>CS8632;CS0067;CA1416</NoWarn>
-		<Version>3.0.5</Version>
-		<Copyright>Copyright (c) 2021-2023 Mahdi Hosseini</Copyright>
-		<Description>useful helpers, extension methods and classes</Description>
-		<GeneratePackageOnBuild>False</GeneratePackageOnBuild>
-		<PackageId>WinUICommunity.Common</PackageId>
-		<PackageIcon>icon.png</PackageIcon>
-		<PackageLicenseFile>LICENSE</PackageLicenseFile>
-		<PackageReadmeFile>README.md</PackageReadmeFile>
-		<PackageProjectUrl>https://github.com/WinUICommunity/Common</PackageProjectUrl>
-		<RepositoryUrl>https://github.com/WinUICommunity/Common</RepositoryUrl>
-		<PackageTags>winui winui3 win11 xaml Common SettingsUI settings theme styles projectreunion winappsdk windowsappsdk wasdk reunion SettingsControls settingsexpander settingscard</PackageTags>
-		<PackageReleaseNotes>https://github.com/WinUICommunity/Common/releases</PackageReleaseNotes>
-	</PropertyGroup>
-
-	<ItemGroup>
-		<None Include="Assets\icon.png" Pack="true" PackagePath="" />
-		<None Include="..\LICENSE" Pack="true" PackagePath="" />
-		<None Include="..\README.md" Pack="true" PackagePath="" />
-	</ItemGroup>
-	<ItemGroup>
-		<PackageReference Include="Microsoft.WindowsAppSDK" Version="1.2.230118.102" />
-		<PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.22621.755" />
-		<PackageReference Include="nucs.JsonSettings" Version="2.0.1" />
-		<PackageReference Include="nucs.JsonSettings.Autosave" Version="2.0.1" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <ProjectReference Include="..\..\WinUICommunity.Shared\WinUICommunity.Shared\WinUICommunity.Shared.csproj" />
-	</ItemGroup>
+  <PropertyGroup>
+	<TargetFrameworks>net6.0-windows10.0.17763.0;net6.0-windows10.0.19041.0;net7.0-windows10.0.17763.0;net7.0-windows10.0.19041.0</TargetFrameworks>
+	<TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+	<RuntimeIdentifiers>win10-x86;win10-x64;win10-arm64</RuntimeIdentifiers>
+	<RootNamespace>WinUICommunity.Common</RootNamespace>
+	<UseWinUI>true</UseWinUI>
+	<ImplicitUsings>true</ImplicitUsings>
+	<NoWarn>CS8632;CS0067;CA1416</NoWarn>
+	<Version>3.1.0</Version>
+	<Copyright>Copyright (c) 2021-2023 Mahdi Hosseini</Copyright>
+	<Description>useful helpers, extension methods and classes</Description>
+	<GeneratePackageOnBuild>False</GeneratePackageOnBuild>
+	<PackageId>WinUICommunity.Common</PackageId>
+	<PackageIcon>icon.png</PackageIcon>
+	<PackageLicenseFile>LICENSE</PackageLicenseFile>
+	<PackageReadmeFile>README.md</PackageReadmeFile>
+	<PackageProjectUrl>https://github.com/WinUICommunity/Common</PackageProjectUrl>
+	<RepositoryUrl>https://github.com/WinUICommunity/Common</RepositoryUrl>
+	<PackageTags>winui winui3 win11 xaml Common SettingsUI settings theme styles projectreunion winappsdk windowsappsdk wasdk reunion SettingsControls settingsexpander settingscard</PackageTags>
+	<PackageReleaseNotes>https://github.com/WinUICommunity/Common/releases</PackageReleaseNotes>
+  </PropertyGroup> 
+  <ItemGroup>
+	<None Include="Assets\icon.png" Pack="true" PackagePath="" />
+	<None Include="..\LICENSE" Pack="true" PackagePath="" />
+	<None Include="..\README.md" Pack="true" PackagePath="" />
+  </ItemGroup>
+  <ItemGroup>
+	<PackageReference Include="Microsoft.WindowsAppSDK" Version="1.2.230217.4" />
+	<PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.22621.755" />
+	<PackageReference Include="nucs.JsonSettings" Version="2.0.1" />
+	<PackageReference Include="nucs.JsonSettings.Autosave" Version="2.0.1" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\WinUICommunity.Shared\WinUICommunity.Shared\WinUICommunity.Shared.csproj" />
+  </ItemGroup>
 </Project>

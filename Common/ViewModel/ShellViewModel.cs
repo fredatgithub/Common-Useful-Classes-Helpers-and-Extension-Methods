@@ -1,5 +1,4 @@
 ﻿using Microsoft.UI.Xaml.Input;
-using WinUICommunity.Common.Tools;
 
 namespace WinUICommunity.Common.ViewModel;
 

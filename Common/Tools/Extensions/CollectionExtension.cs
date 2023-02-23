@@ -22,7 +22,7 @@ public static class CollectionExtension
                 collection.Add(local);
             }
         }
-    } 
+    }
 
     /// <summary>
     /// Clones the observable collection.

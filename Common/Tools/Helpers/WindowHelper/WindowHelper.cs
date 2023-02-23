@@ -85,7 +85,8 @@ public static partial class WindowHelper
     /// <param name="window"></param>
     public static void TrackWindow(Window window)
     {
-        window.Closed += (sender, args) => {
+        window.Closed += (sender, args) =>
+        {
             _activeWindows.Remove(window);
         };
         _activeWindows.Add(window);
