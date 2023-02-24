@@ -12,7 +12,6 @@ public class NavigationViewHelper
     private RootFrameNavigationHelper _navHelper;
     private NavigationView NavigationViewControl;
     private Frame rootFrame;
-    private Type @this;
     private AutoSuggestBox controlsSearchBox;
     private Type settingsPage;
     private Type defaultPage;
@@ -36,11 +35,10 @@ public class NavigationViewHelper
         get { return NavigationViewControl; }
     }
 
-    private void InternalInitialize(string JsonFileRelativePath, Type currentPage, Frame frame, NavigationView navigationView)
+    private void InternalInitialize(string JsonFileRelativePath, Frame frame, NavigationView navigationView)
     {
         NavigationViewControl = navigationView;
         rootFrame = frame;
-        @this = currentPage;
         _navHelper = new RootFrameNavigationHelper(frame, navigationView);
         jsonFileRelativePath = JsonFileRelativePath;
         NavigationViewControl.Loaded += OnNavigationViewControlLoaded;
@@ -49,9 +47,9 @@ public class NavigationViewHelper
         AddNavigationMenuItems();
     }
 
-    public NavigationViewHelper Initialize(string JsonFileRelativePath, Type currentPage, Frame frame, NavigationView navigationView)
+    public NavigationViewHelper Initialize(string JsonFileRelativePath, Frame frame, NavigationView navigationView)
     {
-        InternalInitialize(JsonFileRelativePath, currentPage, frame, navigationView);
+        InternalInitialize(JsonFileRelativePath, frame, navigationView);
         return this;
     }
 
@@ -106,34 +104,125 @@ public class NavigationViewHelper
         args.Parameter = targetPageArguments;
         rootFrame.Navigate(pageType, args, navigationTransitionInfo);
     }
+
+    /// <summary>
+    /// Navigate to SectionPage and ItemPage or Navigate to desired Page
+    /// </summary>
+    /// <param name="args"></param>
+    /// <param name="sectionPage">navigate to sectionPage if page is null</param>
+    /// <param name="itemPage">navigate to itemPage if page is null</param>
+    /// <param name="page">navigate to page if sectionPage and itemPage is null</param>
+    public void OnNavigationViewSelectionChanged(NavigationViewSelectionChangedEventArgs args, Type sectionPage, Type itemPage, Type page = null)
+    {
+        if (!args.IsSettingsSelected)
+        {
+            if (page is not null)
+            {
+                GetCurrent().Navigate(page);
+            }
+            else
+            {
+                var selectedItem = args.SelectedItemContainer;
+                if (selectedItem.DataContext is ControlInfoDataGroup)
+                {
+                    var itemId = ((ControlInfoDataGroup)selectedItem.DataContext).UniqueId;
+                    GetCurrent().Navigate(sectionPage, itemId);
+                }
+                else if (selectedItem.DataContext is ControlInfoDataItem)
+                {
+                    var item = (ControlInfoDataItem)selectedItem.DataContext;
+                    GetCurrent().Navigate(itemPage, item.UniqueId);
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// Navigate to ItemPage or Navigate to desired Page
+    /// </summary>
+    /// <param name="args"></param>
+    /// <param name="itemPage">navigate to itemPage if page is null</param>
+    /// <param name="page">navigate to page if itemPage is null</param>
+    public void AutoSuggestBoxQuerySubmitted(AutoSuggestBoxQuerySubmittedEventArgs args, Type itemPage, Type page = null)
+    {
+        if (args.ChosenSuggestion != null && args.ChosenSuggestion is ControlInfoDataItem)
+        {
+            var infoDataItem = args.ChosenSuggestion as ControlInfoDataItem;
+            var hasChangedSelection = GetCurrent().EnsureItemIsVisibleInNavigation(infoDataItem.Title);
+
+            // In case the menu selection has changed, it means that it has triggered
+            // the selection changed event, that will navigate to the page already
+            if (!hasChangedSelection)
+            {
+                if (page is not null)
+                {
+                    string pageString = infoDataItem.UniqueId;
+                    Assembly assembly = Assembly.Load(infoDataItem.ApiNamespace);
+                    if (assembly is not null)
+                    {
+                        page = assembly.GetType(pageString);
+                    }
+                    GetCurrent().Navigate(page);
+                }
+                else
+                {
+                    GetCurrent().Navigate(itemPage, infoDataItem.UniqueId);
+                }
+            }
+        }
+    }
+
     private async void AddNavigationMenuItems()
     {
         await ControlInfoDataSource.Instance.GetGroupsAsync(jsonFileRelativePath);
 
-        foreach (var group in ControlInfoDataSource.Instance.Groups.OrderBy(i => i.Title).Where(i => !i.IsSpecialSection))
+        
+        foreach (var group in ControlInfoDataSource.Instance.Groups.OrderBy(i => i.Title).Where(i => !i.IsSpecialSection && !i.HideGroup))
         {
-            var itemGroup = new NavigationViewItem() { Content = group.Title, Tag = group.UniqueId, DataContext = group, Icon = GetIcon(group.ImageIconPath) };
-
-            if (menuFlyout != null)
+            if (ControlInfoDataSource.Instance.Groups.Count == 1 && group.IsSingleGroup)
             {
-                itemGroup.ContextFlyout = menuFlyout;
+                foreach (var item in group.Items.Where(i => !i.HideItem))
+                {
+                    var itemInGroup = new NavigationViewItem() { IsEnabled = item.IncludedInBuild, Icon = GetIcon(item.ImageIconPath), Content = item.Title, Tag = item.UniqueId, DataContext = item };
+
+                    if (menuFlyout != null)
+                    {
+                        itemInGroup.ContextFlyout = menuFlyout;
+                    }
+                    NavigationViewControl.MenuItems.Add(itemInGroup);
+                    AutomationProperties.SetName(itemInGroup, item.Title);
+                }
             }
-
-            AutomationProperties.SetName(itemGroup, group.Title);
-
-            foreach (var item in group.Items)
+            else
             {
-                var itemInGroup = new NavigationViewItem() { IsEnabled = item.IncludedInBuild, Content = item.Title, Tag = item.UniqueId, DataContext = item };
+                var itemGroup = new NavigationViewItem() { Content = group.Title, IsExpanded = group.IsExpanded, Tag = group.UniqueId, DataContext = group, Icon = GetIcon(group.ImageIconPath) };
 
                 if (menuFlyout != null)
                 {
-                    itemInGroup.ContextFlyout = menuFlyout;
+                    itemGroup.ContextFlyout = menuFlyout;
                 }
-                itemGroup.MenuItems.Add(itemInGroup);
-                AutomationProperties.SetName(itemInGroup, item.Title);
-            }
 
-            NavigationViewControl.MenuItems.Add(itemGroup);
+                AutomationProperties.SetName(itemGroup, group.Title);
+
+                foreach (var item in group.Items.Where(i => !i.HideItem))
+                {
+                    var itemInGroup = new NavigationViewItem() { IsEnabled = item.IncludedInBuild, Icon = GetIcon(item.ImageIconPath), Content = item.Title, Tag = item.UniqueId, DataContext = item };
+
+                    if (menuFlyout != null)
+                    {
+                        itemInGroup.ContextFlyout = menuFlyout;
+                    }
+                    itemGroup.MenuItems.Add(itemInGroup);
+                    AutomationProperties.SetName(itemInGroup, item.Title);
+                }
+
+                NavigationViewControl.MenuItems.Add(itemGroup);
+            }
+        }
+
+        if (defaultPage != null)
+        {
+            Navigate(defaultPage);
         }
     }
 
@@ -160,10 +249,6 @@ public class NavigationViewHelper
 
     private void OnNavigationViewControlLoaded(object sender, RoutedEventArgs e)
     {
-        if (defaultPage != null)
-        {
-            Navigate(defaultPage);
-        }
         // Delay necessary to ensure NavigationView visual state can match navigation
         Task.Delay(500).ContinueWith(_ => NavigationViewLoaded?.Invoke(), TaskScheduler.FromCurrentSynchronizationContext());
     }
@@ -206,7 +291,7 @@ public class NavigationViewHelper
             else
             {
                 // Create a single "No results found" item
-                var noResultsItem = new ControlInfoDataItem("", itemNotFoundString, "", "", "", itemNotFoundImage, "", "", "", "", false, false, false, false);
+                var noResultsItem = new ControlInfoDataItem("", itemNotFoundString, "", "", "", itemNotFoundImage, "", "", "", "", false, false, false, false, false);
 
                 // Add the item to a new list of suggestions
                 var noResultsList = new List<ControlInfoDataItem>();
