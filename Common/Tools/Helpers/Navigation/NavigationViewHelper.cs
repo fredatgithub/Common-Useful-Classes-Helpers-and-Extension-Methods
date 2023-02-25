@@ -181,7 +181,7 @@ public class NavigationViewHelper
         {
             if (ControlInfoDataSource.Instance.Groups.Count == 1 && group.IsSingleGroup)
             {
-                foreach (var item in group.Items.Where(i => !i.HideItem))
+                foreach (var item in group.Items.Where(i => !i.HideNavigationViewItem))
                 {
                     var itemInGroup = new NavigationViewItem() { IsEnabled = item.IncludedInBuild, Icon = GetIcon(item.ImageIconPath), Content = item.Title, Tag = item.UniqueId, DataContext = item };
 
@@ -204,7 +204,7 @@ public class NavigationViewHelper
 
                 AutomationProperties.SetName(itemGroup, group.Title);
 
-                foreach (var item in group.Items.Where(i => !i.HideItem))
+                foreach (var item in group.Items.Where(i => !i.HideNavigationViewItem))
                 {
                     var itemInGroup = new NavigationViewItem() { IsEnabled = item.IncludedInBuild, Icon = GetIcon(item.ImageIconPath), Content = item.Title, Tag = item.UniqueId, DataContext = item };
 
@@ -291,7 +291,7 @@ public class NavigationViewHelper
             else
             {
                 // Create a single "No results found" item
-                var noResultsItem = new ControlInfoDataItem("", itemNotFoundString, "", "", "", itemNotFoundImage, "", "", "", "", false, false, false, false, false);
+                var noResultsItem = new ControlInfoDataItem("", itemNotFoundString, "", "", "", itemNotFoundImage, "", "", "", "", false, false, false, false, false, false);
 
                 // Add the item to a new list of suggestions
                 var noResultsList = new List<ControlInfoDataItem>();
