@@ -20,7 +20,7 @@ public class NavigationViewHelper
     private string jsonFileRelativePath;
     private string itemNotFoundString;
     private string itemNotFoundImage;
-
+    private bool hasInfoBadge = false;
     public static NavigationViewHelper GetCurrent()
     {
         if (Instance == null)
@@ -47,12 +47,26 @@ public class NavigationViewHelper
         AddNavigationMenuItems();
     }
 
-    public NavigationViewHelper Initialize(string JsonFileRelativePath, Frame frame, NavigationView navigationView)
+    /// <summary>
+    /// Use This Method in Last Option
+    /// </summary>
+    /// <param name="JsonFileRelativePath">DataModel/ControlInfoData.json</param>
+    /// <param name="frame">Frame</param>
+    /// <param name="navigationView">NavigationView</param>
+    /// <returns></returns>
+    public NavigationViewHelper Build(string JsonFileRelativePath, Frame frame, NavigationView navigationView)
     {
         InternalInitialize(JsonFileRelativePath, frame, navigationView);
         return this;
     }
 
+    /// <summary>
+    /// You can Search items in AutoSuggestBox
+    /// </summary>
+    /// <param name="autoSuggestBox">AutoSuggestBox</param>
+    /// <param name="itemNotFoundImage">Item Not Found Image. Optional</param>
+    /// <param name="itemNotFoundString">Item Not Found String. Optional</param>
+    /// <returns></returns>
     public NavigationViewHelper WithAutoSuggestBox(AutoSuggestBox autoSuggestBox, string itemNotFoundImage = null, string itemNotFoundString = "No results found")
     {
         controlsSearchBox = autoSuggestBox;
@@ -68,25 +82,58 @@ public class NavigationViewHelper
         controlsSearchBox.TextChanged += OnControlsSearchBoxTextChanged;
         return this;
     }
+
+    /// <summary>
+    /// Open a Page as a Default Page
+    /// </summary>
+    /// <param name="defaultPage">Page</param>
+    /// <returns></returns>
     public NavigationViewHelper WithDefaultPage(Type defaultPage)
     {
         this.defaultPage = defaultPage;
         return this;
     }
+
+    /// <summary>
+    /// How Should we Check if Item exist? based on a json property? or Real Check?
+    /// </summary>
+    /// <param name="includedInBuildMode">IncludedInBuildMode enum</param>
+    /// <returns></returns>
     public NavigationViewHelper WithIncludedInBuildMode(IncludedInBuildMode includedInBuildMode)
     {
         this.includedInBuildMode = includedInBuildMode;
         return this;
     }
+
+    /// <summary>
+    /// Define a SettingsPage so when user click on Setting icon will be navigated to desired page.
+    /// </summary>
+    /// <param name="settingsPage">Page</param>
+    /// <returns></returns>
     public NavigationViewHelper WithSettingsPage(Type settingsPage)
     {
         this.settingsPage = settingsPage;
         return this;
     }
 
+    /// <summary>
+    /// Add a MenuFlyout when user Right-Click on NavigationViewItem
+    /// </summary>
+    /// <param name="menuFlyout"></param>
+    /// <returns></returns>
     public NavigationViewHelper WithMenuFlyout(MenuFlyout menuFlyout)
     {
         this.menuFlyout = menuFlyout;
+        return this;
+    }
+
+    /// <summary>
+    /// Read InfoBadge Value from json and Show in NavigationViewItem
+    /// </summary>
+    /// <returns></returns>
+    public NavigationViewHelper WithInfoBadge()
+    {
+        this.hasInfoBadge = true;
         return this;
     }
 
@@ -175,7 +222,6 @@ public class NavigationViewHelper
     private async void AddNavigationMenuItems()
     {
         await ControlInfoDataSource.Instance.GetGroupsAsync(jsonFileRelativePath);
-
         
         foreach (var group in ControlInfoDataSource.Instance.Groups.OrderBy(i => i.Title).Where(i => !i.IsSpecialSection && !i.HideGroup))
         {
@@ -189,6 +235,8 @@ public class NavigationViewHelper
                     {
                         itemInGroup.ContextFlyout = menuFlyout;
                     }
+                    
+                    itemInGroup.InfoBadge = GetInfoBadge(item);
                     NavigationViewControl.MenuItems.Add(itemInGroup);
                     AutomationProperties.SetName(itemInGroup, item.Title);
                 }
@@ -204,6 +252,7 @@ public class NavigationViewHelper
 
                 AutomationProperties.SetName(itemGroup, group.Title);
 
+                itemGroup.InfoBadge = GetInfoBadge(group);
                 foreach (var item in group.Items.Where(i => !i.HideNavigationViewItem))
                 {
                     var itemInGroup = new NavigationViewItem() { IsEnabled = item.IncludedInBuild, Icon = GetIcon(item.ImageIconPath), Content = item.Title, Tag = item.UniqueId, DataContext = item };
@@ -212,6 +261,8 @@ public class NavigationViewHelper
                     {
                         itemInGroup.ContextFlyout = menuFlyout;
                     }
+                    
+                    itemInGroup.InfoBadge = GetInfoBadge(item);
                     itemGroup.MenuItems.Add(itemInGroup);
                     AutomationProperties.SetName(itemInGroup, item.Title);
                 }
@@ -225,7 +276,89 @@ public class NavigationViewHelper
             Navigate(defaultPage);
         }
     }
+    private InfoBadge GetInfoBadge(dynamic controlInfoData)
+    {
+        if (controlInfoData.InfoBadge is not null)
+        {
+            bool hideNavigationViewItemBadge = controlInfoData.InfoBadge.HideNavigationViewItemBadge;
+            string value = controlInfoData.InfoBadge.BadgeValue;
+            string style = controlInfoData.InfoBadge.BadgeStyle;
+            bool hasValue = !string.IsNullOrEmpty(value);
+            if (style.Contains("Dot", StringComparison.OrdinalIgnoreCase) || style.Contains("Icon", StringComparison.OrdinalIgnoreCase))
+            {
+                hasValue = true;
+            }
+            if (hasInfoBadge && !hideNavigationViewItemBadge && hasValue)
+            {
+                int badgeValue = Convert.ToInt32(controlInfoData.InfoBadge.BadgeValue);
+                int width = controlInfoData.InfoBadge.BadgeWidth;
+                int height = controlInfoData.InfoBadge.BadgeHeight;
 
+                InfoBadge infoBadge = new InfoBadge
+                {
+                    Style = Application.Current.Resources[style] as Style
+                };
+                switch (style.ToLower())
+                {
+                    case string s when s.Contains("value"):
+                        infoBadge.Value = badgeValue;
+                        break;
+                    case string s when s.Contains("icon"):
+                        infoBadge.IconSource = GetIconSource(controlInfoData.InfoBadge);
+                        break;
+                }
+
+                if (width > 0 && height > 0)
+                {
+                    infoBadge.Width = width;
+                    infoBadge.Height = height;
+                }
+
+                return infoBadge;
+            }
+        }
+        return null;
+    }
+
+    private IconSource GetIconSource(ControlInfoBadge infoBadge)
+    {
+        string symbol = infoBadge.BadgeSymbolIcon;
+        string image = infoBadge.BadgeBitmapIcon;
+        string glyph = infoBadge.BadgeFontIconGlyph;
+        string fontName = infoBadge.BadgeFontIconFontName;
+        
+        if (!string.IsNullOrEmpty(symbol))
+        {
+            return new SymbolIconSource 
+            { 
+                Symbol = GeneralHelper.GetEnum<Symbol>(symbol),
+                Foreground = Application.Current.Resources["SystemControlForegroundAltHighBrush"] as Brush,
+            };
+        }
+
+        if (!string.IsNullOrEmpty(image))
+        {
+            return new BitmapIconSource {
+                UriSource = new Uri(image),
+                ShowAsMonochrome = false
+            };
+        }
+
+        if (!string.IsNullOrEmpty(glyph))
+        {
+            var fontIcon = new FontIconSource 
+            { 
+                Glyph = GeneralHelper.GetGlyph(glyph), 
+                Foreground = Application.Current.Resources["SystemControlForegroundAltHighBrush"] as Brush,
+            };
+            if (!string.IsNullOrEmpty(fontName))
+            {
+                fontIcon.FontFamily = new FontFamily(fontName);
+            }
+            return fontIcon;
+        }
+        return null;
+    }
     private void OnNavigationViewSelectionChanged(Microsoft.UI.Xaml.Controls.NavigationView sender, NavigationViewSelectionChangedEventArgs args)
     {
         if (args.IsSettingsSelected)
@@ -291,7 +424,7 @@ public class NavigationViewHelper
             else
             {
                 // Create a single "No results found" item
-                var noResultsItem = new ControlInfoDataItem("", itemNotFoundString, "", "", "", itemNotFoundImage, "", "", "", "", false, false, false, false, false, false);
+                var noResultsItem = new ControlInfoDataItem("", itemNotFoundString, "", "", "", itemNotFoundImage, itemNotFoundImage, "", "", "", false, false, false, false, false, false, null);
 
                 // Add the item to a new list of suggestions
                 var noResultsList = new List<ControlInfoDataItem>();

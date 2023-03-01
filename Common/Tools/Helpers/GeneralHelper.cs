@@ -59,4 +59,15 @@ public static class GeneralHelper
                 Convert.ToByte(hexaColor.Substring(7, 2), 16)
             );
     }
+
+    /// <summary>
+    /// Get Glyph string
+    /// </summary>
+    /// <param name="key">Example: EA6A</param>
+    /// <returns></returns>
+    public static string GetGlyph(string key)
+    {
+        int codePoint = int.Parse(key, System.Globalization.NumberStyles.HexNumber);
+        return char.ConvertFromUtf32(codePoint);
+    }
 }
