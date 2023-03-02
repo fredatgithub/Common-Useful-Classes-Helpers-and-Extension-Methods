@@ -165,7 +165,7 @@ public class NavigationViewHelper
         {
             if (page is not null)
             {
-                GetCurrent().Navigate(page);
+                Navigate(page);
             }
             else
             {
@@ -173,12 +173,12 @@ public class NavigationViewHelper
                 if (selectedItem.DataContext is ControlInfoDataGroup)
                 {
                     var itemId = ((ControlInfoDataGroup)selectedItem.DataContext).UniqueId;
-                    GetCurrent().Navigate(sectionPage, itemId);
+                    Navigate(sectionPage, itemId);
                 }
                 else if (selectedItem.DataContext is ControlInfoDataItem)
                 {
                     var item = (ControlInfoDataItem)selectedItem.DataContext;
-                    GetCurrent().Navigate(itemPage, item.UniqueId);
+                    Navigate(itemPage, item.UniqueId);
                 }
             }
         }
@@ -195,7 +195,7 @@ public class NavigationViewHelper
         if (args.ChosenSuggestion != null && args.ChosenSuggestion is ControlInfoDataItem)
         {
             var infoDataItem = args.ChosenSuggestion as ControlInfoDataItem;
-            var hasChangedSelection = GetCurrent().EnsureItemIsVisibleInNavigation(infoDataItem.Title);
+            var hasChangedSelection = EnsureItemIsVisibleInNavigation(infoDataItem.Title);
 
             // In case the menu selection has changed, it means that it has triggered
             // the selection changed event, that will navigate to the page already
@@ -209,11 +209,11 @@ public class NavigationViewHelper
                     {
                         page = assembly.GetType(pageString);
                     }
-                    GetCurrent().Navigate(page);
+                    Navigate(page);
                 }
                 else
                 {
-                    GetCurrent().Navigate(itemPage, infoDataItem.UniqueId);
+                    Navigate(itemPage, infoDataItem.UniqueId);
                 }
             }
         }
