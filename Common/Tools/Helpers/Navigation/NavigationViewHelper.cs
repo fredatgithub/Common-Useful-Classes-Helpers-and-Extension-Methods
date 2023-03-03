@@ -188,13 +188,12 @@ public class NavigationViewHelper
             var selectedItem = (args.SelectedItem as NavigationViewItem).DataContext;
             var item = selectedItem as ControlInfoDataItem;
             var itemGroup = selectedItem as ControlInfoDataGroup;
-            Type pageType = null;
             if (selectedItem is ControlInfoDataItem)
             {
                 Assembly assembly = Assembly.Load(item.ApiNamespace);
                 if (assembly is not null)
                 {
-                    pageType = assembly.GetType(item.UniqueId);
+                    Type pageType = assembly.GetType(item.UniqueId);
                     Navigate(pageType);
                 }
             }
