@@ -158,7 +158,7 @@ public class NavigationViewHelper
         {
             var selectedItem = (args.SelectedItem as NavigationViewItem).DataContext;
             var item = selectedItem as ControlInfoDataItem;
-            var itemGroup = selectedItem as ControlInfoDataItem;
+            var itemGroup = selectedItem as ControlInfoDataGroup;
             Type pageType = null;
             if (selectedItem is ControlInfoDataItem)
             {
@@ -187,7 +187,7 @@ public class NavigationViewHelper
         {
             var selectedItem = (args.SelectedItem as NavigationViewItem).DataContext;
             var item = selectedItem as ControlInfoDataItem;
-            var itemGroup = selectedItem as ControlInfoDataItem;
+            var itemGroup = selectedItem as ControlInfoDataGroup;
             Type pageType = null;
             if (selectedItem is ControlInfoDataItem)
             {
