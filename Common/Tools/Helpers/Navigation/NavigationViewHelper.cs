@@ -152,45 +152,84 @@ public class NavigationViewHelper
         rootFrame.Navigate(pageType, args, navigationTransitionInfo);
     }
 
-    /// <summary>
-    /// Navigate to SectionPage and ItemPage or Navigate to desired Page
-    /// </summary>
-    /// <param name="args"></param>
-    /// <param name="sectionPage">navigate to sectionPage if page is null</param>
-    /// <param name="itemPage">navigate to itemPage if page is null</param>
-    /// <param name="page">navigate to page if sectionPage and itemPage is null</param>
-    public void OnNavigationViewSelectionChanged(NavigationViewSelectionChangedEventArgs args, Type sectionPage, Type itemPage, Type page = null)
+    public void OnNavigationViewSelectionChanged(NavigationViewSelectionChangedEventArgs args)
     {
         if (!args.IsSettingsSelected)
         {
-            if (page is not null)
+            var selectedItem = (args.SelectedItem as NavigationViewItem).DataContext;
+            var item = selectedItem as ControlInfoDataItem;
+            var itemGroup = selectedItem as ControlInfoDataItem;
+            Type pageType = null;
+            if (selectedItem is ControlInfoDataItem)
             {
-                Navigate(page);
+                Assembly assembly = Assembly.Load(item.ApiNamespace);
+                if (assembly is not null)
+                {
+                    pageType = assembly.GetType(item.UniqueId);
+                }
             }
             else
             {
-                var selectedItem = args.SelectedItemContainer;
-                if (selectedItem.DataContext is ControlInfoDataGroup)
+                Assembly assembly = Assembly.Load(itemGroup.ApiNamespace);
+                if (assembly is not null)
                 {
-                    var itemId = ((ControlInfoDataGroup)selectedItem.DataContext).UniqueId;
-                    Navigate(sectionPage, itemId);
+                    pageType = assembly.GetType(itemGroup.UniqueId);
                 }
-                else if (selectedItem.DataContext is ControlInfoDataItem)
+            }
+
+            Navigate(pageType);
+        }
+    }
+
+    public void OnNavigationViewSelectionChanged(NavigationViewSelectionChangedEventArgs args, Type sectionPage)
+    {
+        if (!args.IsSettingsSelected)
+        {
+            var selectedItem = (args.SelectedItem as NavigationViewItem).DataContext;
+            var item = selectedItem as ControlInfoDataItem;
+            var itemGroup = selectedItem as ControlInfoDataItem;
+            Type pageType = null;
+            if (selectedItem is ControlInfoDataItem)
+            {
+                Assembly assembly = Assembly.Load(item.ApiNamespace);
+                if (assembly is not null)
                 {
-                    var item = (ControlInfoDataItem)selectedItem.DataContext;
-                    Navigate(itemPage, item.UniqueId);
+                    pageType = assembly.GetType(item.UniqueId);
+                    Navigate(pageType);
                 }
+            }
+            else
+            {
+                Navigate(sectionPage, itemGroup.UniqueId);
             }
         }
     }
 
     /// <summary>
-    /// Navigate to ItemPage or Navigate to desired Page
+    /// Navigate to SectionPage and ItemPage
     /// </summary>
     /// <param name="args"></param>
+    /// <param name="sectionPage">navigate to sectionPage if page is null</param>
     /// <param name="itemPage">navigate to itemPage if page is null</param>
-    /// <param name="page">navigate to page if itemPage is null</param>
-    public void AutoSuggestBoxQuerySubmitted(AutoSuggestBoxQuerySubmittedEventArgs args, Type itemPage, Type page = null)
+    public void OnNavigationViewSelectionChanged(NavigationViewSelectionChangedEventArgs args, Type sectionPage, Type itemPage)
+    {
+        if (!args.IsSettingsSelected)
+        {
+            var selectedItem = args.SelectedItemContainer;
+            if (selectedItem.DataContext is ControlInfoDataGroup)
+            {
+                var itemId = ((ControlInfoDataGroup)selectedItem.DataContext).UniqueId;
+                Navigate(sectionPage, itemId);
+            }
+            else if (selectedItem.DataContext is ControlInfoDataItem)
+            {
+                var item = (ControlInfoDataItem)selectedItem.DataContext;
+                Navigate(itemPage, item.UniqueId);
+            }
+        }
+    }
+
+    public void AutoSuggestBoxQuerySubmitted(AutoSuggestBoxQuerySubmittedEventArgs args)
     {
         if (args.ChosenSuggestion != null && args.ChosenSuggestion is ControlInfoDataItem)
         {
@@ -201,20 +240,35 @@ public class NavigationViewHelper
             // the selection changed event, that will navigate to the page already
             if (!hasChangedSelection)
             {
-                if (page is not null)
+                string pageString = infoDataItem.UniqueId;
+                Type page = null;
+                Assembly assembly = Assembly.Load(infoDataItem.ApiNamespace);
+                if (assembly is not null)
                 {
-                    string pageString = infoDataItem.UniqueId;
-                    Assembly assembly = Assembly.Load(infoDataItem.ApiNamespace);
-                    if (assembly is not null)
-                    {
-                        page = assembly.GetType(pageString);
-                    }
+                    page = assembly.GetType(pageString);
                     Navigate(page);
                 }
-                else
-                {
-                    Navigate(itemPage, infoDataItem.UniqueId);
-                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// Navigate to ItemPage 
+    /// </summary>
+    /// <param name="args"></param>
+    /// <param name="itemPage">navigate to itemPage if page is null</param>
+    public void AutoSuggestBoxQuerySubmitted(AutoSuggestBoxQuerySubmittedEventArgs args, Type itemPage)
+    {
+        if (args.ChosenSuggestion != null && args.ChosenSuggestion is ControlInfoDataItem)
+        {
+            var infoDataItem = args.ChosenSuggestion as ControlInfoDataItem;
+            var hasChangedSelection = EnsureItemIsVisibleInNavigation(infoDataItem.Title);
+
+            // In case the menu selection has changed, it means that it has triggered
+            // the selection changed event, that will navigate to the page already
+            if (!hasChangedSelection)
+            {
+                Navigate(itemPage, infoDataItem.UniqueId);
             }
         }
     }
