@@ -20,6 +20,24 @@ jobs:
       with:
         proj-path: ${{ env.PROJECT_PATH }}
         
+    - name: Add msbuild to PATH
+      uses: microsoft/setup-msbuild@v1.1
+
+    - name: Clean project
+      run: msbuild /t:clean
+
+    - name: Restore NuGet packages
+      run: msbuild /t:Restore
+
+    - name: Build project
+      run: msbuild /t:Rebuild /p:Configuration=Release
+    
+    - name: Generate NuGet package
+      run: msbuild /t:Pack /p:Configuration=Release
+    
+    - name: Push NuGet package to NuGet.org
+      run: dotnet nuget push **/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json
+    
     - name: Create Github Release
       uses: actions/create-release@v1.1.4
       id: create_release
@@ -29,6 +47,13 @@ jobs:
       with:
         tag_name: ${{ env.VersionName }}
         release_name: ${{ env.VersionName }}
+     
+    - name: Upload nupkg file to Github Release    
+      uses: csexton/release-asset-action@v2
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        file: Common\bin\Release\WinUICommunity.Common.${{ steps.get-version.outputs.version-prefix }}.nupkg
+        release-url: ${{ steps.create_release.outputs.upload_url }}
          
   changelog:
     needs: build
