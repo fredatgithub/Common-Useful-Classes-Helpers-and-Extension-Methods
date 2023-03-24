@@ -97,6 +97,7 @@ public static class ThemeHelper
         {
             NativeMethods.SetPreferredAppMode(NativeMethods.PreferredAppMode.Default);
         }
+        NativeMethods.FlushMenuThemes();
     }
 
     /// <summary>

@@ -11,6 +11,8 @@ internal static class NativeMethods
         ForceLight,
         Max
     };
+    [DllImport("uxtheme.dll", EntryPoint = "#136", SetLastError = true, CharSet = CharSet.Unicode)]
+    internal static extern void FlushMenuThemes();
 
     [DllImport("uxtheme.dll", EntryPoint = "#135", SetLastError = true, CharSet = CharSet.Unicode)]
     internal static extern int SetPreferredAppMode(PreferredAppMode preferredAppMode);
