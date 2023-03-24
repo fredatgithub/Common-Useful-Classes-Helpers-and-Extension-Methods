@@ -12,8 +12,6 @@ public class SystemBackdropsHelper
     public SystemBackdropsHelper(Window window)
     {
         this.window = window;
-        ((FrameworkElement) this.window.Content).RequestedTheme = ThemeHelper.RootTheme;
-
         m_wsdqHelper = new WindowsSystemDispatcherQueueHelper();
         m_wsdqHelper.EnsureWindowsSystemDispatcherQueueController();
 

@@ -1,5 +1,8 @@
-﻿namespace WinUICommunity.Common.Helpers;
+﻿using Windows.Foundation.Metadata;
 
+namespace WinUICommunity.Common.Helpers;
+
+[Obsolete("The ThemeHelper is deprecated, Please use the new ThemeManager class, which has newer and better features", false)]
 public static class ThemeHelper
 {
     private const string SelectedAppThemeKey = "SelectedAppTheme";
@@ -36,7 +39,6 @@ public static class ThemeHelper
             return GeneralHelper.GetEnum<ElementTheme>(Application.Current.RequestedTheme.ToString());
         }
     }
-
 
     /// <summary>
     /// Gets or sets (with LocalSettings persistence) the RequestedTheme of the root element.
