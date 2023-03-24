@@ -79,9 +79,23 @@ public static class ThemeHelper
             }
             else
             {
-                WinUICommunity.Common.Internal.UnPackagedSetting.SaveTheme(value.ToString());
+                Internal.UnPackagedSetting.SaveTheme(value.ToString());
             }
-            UpdateSystemCaptionButtonColors();
+        }
+    }
+    public static void SetPreferredAppMode(ElementTheme theme)
+    {
+        if (theme == ElementTheme.Dark)
+        {
+            NativeMethods.SetPreferredAppMode(NativeMethods.PreferredAppMode.ForceDark);
+        }
+        else if (theme == ElementTheme.Light)
+        {
+            NativeMethods.SetPreferredAppMode(NativeMethods.PreferredAppMode.ForceLight);
+        }
+        else
+        {
+            NativeMethods.SetPreferredAppMode(NativeMethods.PreferredAppMode.Default);
         }
     }
 
@@ -133,7 +147,7 @@ public static class ThemeHelper
     /// <summary>
     /// Initialize ThemeHelper
     /// </summary>
-    /// <param name="window"></param>
+    /// <param name="window">Default Window</param>
     public static void Initialize(Window window)
     {
         CurrentApplicationWindow = window;
@@ -141,10 +155,22 @@ public static class ThemeHelper
     }
 
     /// <summary>
+    /// Initialize ThemeHelper with Default Theme
+    /// </summary>
+    /// <param name="window">Default Window</param>
+    /// <param name="theme">Default Theme Dark/Light/Default</param>
+    public static void Initialize(Window window, ElementTheme theme)
+    {
+        CurrentApplicationWindow = window;
+        Initialize();
+        ChangeTheme(theme);
+    }
+
+    /// <summary>
     /// Initialize ThemeHelper with SystemBackdrop
     /// </summary>
-    /// <param name="window"></param>
-    /// <param name="backdropType"></param>
+    /// <param name="window">Default Window</param>
+    /// <param name="backdropType">Default Backdrop Mica/MicaAlt/Acrylic</param>
     public static void Initialize(Window window, BackdropType backdropType)
     {
         CurrentApplicationWindow = window;
@@ -165,8 +191,35 @@ public static class ThemeHelper
         }
     }
 
+    /// <summary>
+    /// Initialize ThemeHelper with Default Theme and SystemBackdrops
+    /// </summary>
+    /// <param name="window">Default Window</param>
+    /// <param name="theme">Default Theme Dark/Light/Default</param>
+    /// <param name="backdropType">Default Backdrop Mica/MicaAlt/Acrylic</param>
+    public static void Initialize(Window window, ElementTheme theme, BackdropType backdropType)
+    {
+        Initialize(window, backdropType);
+        ChangeTheme(theme);
+    }
+
     private static void Initialize()
     {
+        foreach (Window window in WindowHelper.ActiveWindows)
+        {
+            if (window.Content is FrameworkElement rootElement)
+            {
+                SetPreferredAppMode(rootElement.ActualTheme);
+                rootElement.ActualThemeChanged += OnActualThemeChanged;
+            }
+        }
+
+        if (CurrentApplicationWindow != null && CurrentApplicationWindow.Content is FrameworkElement element)
+        {
+            SetPreferredAppMode(element.ActualTheme);
+            element.ActualThemeChanged += OnActualThemeChanged;
+        }
+
         string savedTheme = string.Empty;
 
         if (ApplicationHelper.IsPackaged)
@@ -175,12 +228,18 @@ public static class ThemeHelper
         }
         else
         {
-            savedTheme = WinUICommunity.Common.Internal.UnPackagedSetting.ReadTheme();
+            savedTheme = Internal.UnPackagedSetting.ReadTheme();
         }
         if (savedTheme != null)
         {
             RootTheme = GeneralHelper.GetEnum<ElementTheme>(savedTheme);
         }
+        UpdateSystemCaptionButtonColors();
+    }
+
+    private static void OnActualThemeChanged(FrameworkElement sender, object args)
+    {
+        SetPreferredAppMode(sender.ActualTheme);
         UpdateSystemCaptionButtonColors();
     }
 
@@ -198,7 +257,7 @@ public static class ThemeHelper
         var titleBar = appWindow.TitleBar;
         titleBar.ButtonBackgroundColor = Colors.Transparent;
         titleBar.ButtonInactiveBackgroundColor = Colors.Transparent;
-        if (ThemeHelper.IsDarkTheme())
+        if (IsDarkTheme())
         {
             titleBar.ButtonForegroundColor = Colors.White;
             titleBar.ButtonInactiveForegroundColor = Colors.White;
@@ -266,7 +325,7 @@ public static class ThemeHelper
     /// <param name="sender"></param>
     public static void ComboBoxSelectionChanged(object sender)
     {
-        var cmb = ((ComboBox)sender);
+        var cmb = (ComboBox)sender;
         var selectedTheme = (cmb?.SelectedItem as ComboBoxItem)?.Tag?.ToString();
         if (selectedTheme != null)
         {

@@ -3,6 +3,18 @@
 namespace WinUICommunity.Common.Helpers;
 internal static class NativeMethods
 {
+    internal enum PreferredAppMode
+    {
+        Default,
+        AllowDark,
+        ForceDark,
+        ForceLight,
+        Max
+    };
+
+    [DllImport("uxtheme.dll", EntryPoint = "#135", SetLastError = true, CharSet = CharSet.Unicode)]
+    internal static extern int SetPreferredAppMode(PreferredAppMode preferredAppMode);
+
     [DllImport("user32.dll", SetLastError = true)]
     internal static extern void SwitchToThisWindow(IntPtr hWnd, bool turnOn);
 
