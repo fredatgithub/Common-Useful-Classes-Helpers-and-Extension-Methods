@@ -7,7 +7,7 @@
 	<UseWinUI>true</UseWinUI>
 	<ImplicitUsings>true</ImplicitUsings>
 	<NoWarn>CS8632;CS0067;CA1416</NoWarn>
-	<Version>3.2.6</Version>
+	<Version>3.2.7</Version>
 	<Authors>WinUICommunity</Authors>
 	<Copyright>Copyright (c) 2021-2023 Mahdi Hosseini</Copyright>
 	<Description>useful helpers, extension methods and classes</Description>
