@@ -138,12 +138,23 @@ namespace WinUICommunity.Common.Tools
         #endregion
 
         #region Initialize Window/ElementTheme
-
-        private void InternalInitialize(Window window, ElementTheme theme)
+        private ElementTheme LoadCurrentTheme(ElementTheme theme, bool forceTheme)
+        {
+            var currentTheme = CommonSettings.Settings.ElementTheme;
+            if (forceTheme)
+            {
+                return theme;
+            }
+            else
+            {
+                return currentTheme;
+            }
+        }
+        private void InternalInitialize(Window window, ElementTheme theme, bool forceTheme)
         {
             CurrentApplicationWindow = window;
             InternalInitialize();
-            ChangeTheme(theme);
+            ChangeTheme(LoadCurrentTheme(theme, forceTheme));
         }
 
         /// <summary>
@@ -151,31 +162,33 @@ namespace WinUICommunity.Common.Tools
         /// </summary>
         /// <param name="window">The window to apply the theme to.</param>
         /// <param name="theme">The initial theme to apply to the window.</param>
+        /// <param name="forceTheme">force theme, saved theme will be ignored.</param>
         /// <remarks>
         /// This constructor creates a new instance of the ThemeManager class with the specified window and initial theme. The ThemeManager is used to manage the application's theme and UI settings, and can be used to apply themes to specific windows or to the entire application. The specified window is used as the target for theme changes and updates, and the specified theme is applied as the initial theme for the window. 
         /// </remarks>
-        public ThemeManager(Window window, ElementTheme theme)
+        public ThemeManager(Window window, ElementTheme theme, bool forceTheme = false)
         {
-            InternalInitialize(window, theme);
+            InternalInitialize(window, theme, forceTheme);
         }
 
         /// <summary>
         /// Initializes the ThemeManager instance with the specified theme.
         /// </summary>
         /// <param name="theme">The initial theme to apply to the application.</param>
+        /// <param name="forceTheme">force theme, saved theme will be ignored.</param>
         /// <returns>The initialized ThemeManager instance.</returns>
         /// <remarks>
         /// This method initializes the ThemeManager instance with the specified initial theme and returns it. The ThemeManager is used to manage the application's theme and UI settings, and can be used to apply themes to specific windows or to the entire application. The specified theme is applied as the initial theme for the application. The Initialize method must be called before the ThemeManager can be used to change themes or perform other operations related to the application's visual style and appearance.
         /// </remarks>
-        public static ThemeManager Initialize(ElementTheme theme)
+        public static ThemeManager Initialize(ElementTheme theme, bool forceTheme = false)
         {
             if (Instance == null)
             {
-                instance = new ThemeManager(null, theme);
+                instance = new ThemeManager(null, theme, forceTheme);
             }
             else
             {
-                instance.InternalInitialize(null, theme);
+                instance.InternalInitialize(null, theme, forceTheme);
             }
             return Instance;
         }
@@ -185,19 +198,20 @@ namespace WinUICommunity.Common.Tools
         /// </summary>
         /// <param name="window">The window to apply the theme to.</param>
         /// <param name="theme">The initial theme to apply to the window.</param>
+        /// <param name="forceTheme">force theme, saved theme will be ignored.</param>
         /// <returns>The initialized ThemeManager instance.</returns>
         /// <remarks>
         /// This method initializes the ThemeManager instance with the specified window and initial theme, and returns it. The ThemeManager is used to manage the application's theme and UI settings, and can be used to apply themes to specific windows or to the entire application. The specified window is used as the target for theme changes and updates, and the specified theme is applied as the initial theme for the window. The Initialize method must be called before the ThemeManager can be used to change themes or perform other operations related to the application's visual style and appearance. 
         /// </remarks>
-        public static ThemeManager Initialize(Window window, ElementTheme theme)
+        public static ThemeManager Initialize(Window window, ElementTheme theme, bool forceTheme = false)
         {
             if (Instance == null)
             {
-                instance = new ThemeManager(window, theme);
+                instance = new ThemeManager(window, theme, forceTheme);
             }
             else
             {
-                instance.InternalInitialize(window, theme);
+                instance.InternalInitialize(window, theme, forceTheme);
             }
             return Instance;
         }
