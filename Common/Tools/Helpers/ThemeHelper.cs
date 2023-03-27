@@ -1,4 +1,5 @@
 ﻿using Windows.Foundation.Metadata;
+using WinUICommunity.Common.Internal;
 
 namespace WinUICommunity.Common.Helpers;
 
@@ -75,14 +76,8 @@ public static class ThemeHelper
                 element.RequestedTheme = value;
             }
 
-            if (ApplicationHelper.IsPackaged)
-            {
-                ApplicationData.Current.LocalSettings.Values[SelectedAppThemeKey] = value.ToString();
-            }
-            else
-            {
-                Internal.UnPackagedSetting.SaveTheme(value.ToString());
-            }
+            CommonSettings.Settings.ElementTheme = value;
+            CommonSettings.Settings.Save();
         }
     }
     public static void SetPreferredAppMode(ElementTheme theme)
@@ -223,20 +218,8 @@ public static class ThemeHelper
             element.ActualThemeChanged += OnActualThemeChanged;
         }
 
-        string savedTheme = string.Empty;
+        RootTheme = CommonSettings.Settings.ElementTheme;
 
-        if (ApplicationHelper.IsPackaged)
-        {
-            savedTheme = ApplicationData.Current.LocalSettings.Values[SelectedAppThemeKey]?.ToString();
-        }
-        else
-        {
-            savedTheme = Internal.UnPackagedSetting.ReadTheme();
-        }
-        if (savedTheme != null)
-        {
-            RootTheme = GeneralHelper.GetEnum<ElementTheme>(savedTheme);
-        }
         UpdateSystemCaptionButtonColors();
     }
 

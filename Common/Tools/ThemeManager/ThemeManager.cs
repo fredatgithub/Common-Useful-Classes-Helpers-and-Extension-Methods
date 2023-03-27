@@ -1,8 +1,9 @@
-﻿namespace WinUICommunity.Common.Tools;
+﻿using WinUICommunity.Common.Internal;
+
+namespace WinUICommunity.Common.Tools;
 
 public partial class ThemeManager
 {
-    private const string SelectedAppThemeKey = "SelectedAppThemeV2";
     private Window CurrentApplicationWindow;
     private SystemBackdropsHelper systemBackdropsHelper;
     private Dictionary<Window, SystemBackdropsHelper> systemBackdropsHelperDic = new Dictionary<Window, SystemBackdropsHelper>();
@@ -88,15 +89,8 @@ public partial class ThemeManager
             {
                 element.RequestedTheme = value;
             }
-
-            if (ApplicationHelper.IsPackaged)
-            {
-                ApplicationData.Current.LocalSettings.Values[SelectedAppThemeKey] = value.ToString();
-            }
-            else
-            {
-                Internal.UnPackagedSetting.SaveTheme(value.ToString());
-            }
+            CommonSettings.Settings.ElementTheme = value;
+            CommonSettings.Settings.Save();
         }
     }
 
@@ -142,6 +136,8 @@ public partial class ThemeManager
         {
             systemBackdropsHelper.SetBackdrop(backdropType);
         }
+        CommonSettings.Settings.BackdropType = backdropType;
+        CommonSettings.Settings.Save();
     }
 
     /// <summary>
@@ -258,7 +254,7 @@ public partial class ThemeManager
     /// <remarks>
     /// This method is an event handler for when a radio button is checked. It takes the sender object as a parameter and performs the required actions based on the checked state of the radio button. The specific actions performed by this method depend on the requirements of the application and the UI design, and can include updating the user interface, setting application preferences, or performing other operations.
     /// </remarks>
-    public void OnRadioButtonChecked(object sender)
+    public void OnThemeRadioButtonChecked(object sender)
     {
         var selectedTheme = ((RadioButton)sender)?.Tag?.ToString();
         if (selectedTheme != null)
@@ -274,10 +270,40 @@ public partial class ThemeManager
     /// <remarks>
     /// This method sets the default radio button item for the specified panel. It is typically used to ensure that one of the radio buttons in the panel is selected by default when the panel is displayed to the user. 
     /// </remarks>
-    public void SetRadioButtonDefaultItem(Panel ThemePanel)
+    public void SetThemeRadioButtonDefaultItem(Panel ThemePanel)
     {
         var currentTheme = RootTheme.ToString();
         ThemePanel.Children.Cast<RadioButton>().FirstOrDefault(c => c?.Tag?.ToString() == currentTheme).IsChecked = true;
+    }
+
+    /// <summary>
+    /// Event handler for when a radio button is checked.
+    /// </summary>
+    /// <param name="sender">The object that raised the event.</param>
+    /// <remarks>
+    /// This method is an event handler for when a radio button is checked. It takes the sender object as a parameter and performs the required actions based on the checked state of the radio button. The specific actions performed by this method depend on the requirements of the application and the UI design, and can include updating the user interface, setting application preferences, or performing other operations.
+    /// </remarks>
+    public void OnBackdropRadioButtonChecked(object sender)
+    {
+        var selectedBackdrop = ((RadioButton)sender)?.Tag?.ToString();
+        if (selectedBackdrop != null)
+        {
+            var backdrop = GeneralHelper.GetEnum<BackdropType>(selectedBackdrop);
+            SetSystemBackdrop(backdrop);
+        }
+    }
+
+    /// <summary>
+    /// Sets the default radio button item for the specified panel.
+    /// </summary>
+    /// <param name="BackdropPanel">The panel to set the default radio button item for. StackPanel/Grid</param>
+    /// <remarks>
+    /// This method sets the default radio button item for the specified panel. It is typically used to ensure that one of the radio buttons in the panel is selected by default when the panel is displayed to the user. 
+    /// </remarks>
+    public void SetBackdropRadioButtonDefaultItem(Panel BackdropPanel)
+    {
+        var currentBackdrop = GetSystemBackdrop().ToString();
+        BackdropPanel.Children.Cast<RadioButton>().FirstOrDefault(c => c?.Tag?.ToString() == currentBackdrop).IsChecked = true;
     }
 
     /// <summary>
@@ -287,7 +313,7 @@ public partial class ThemeManager
     /// <remarks>
     /// This method is an event handler for when the selection is changed in a combobox. It takes the sender object as a parameter and performs the required actions based on the selected item in the combobox.
     /// </remarks>
-    public void OnComboBoxSelectionChanged(object sender)
+    public void OnThemeComboBoxSelectionChanged(object sender)
     {
         var cmb = (ComboBox)sender;
         var selectedTheme = (cmb?.SelectedItem as ComboBoxItem)?.Tag?.ToString();
@@ -304,10 +330,42 @@ public partial class ThemeManager
     /// <remarks>
     /// This method sets the default item for the specified combobox. It is typically used to ensure that one of the items in the combobox is selected by default when the combo box is displayed to the user.
     /// </remarks>
-    public void SetComboBoxDefaultItem(ComboBox themeComboBox)
+    public void SetThemeComboBoxDefaultItem(ComboBox themeComboBox)
     {
         var currentTheme = RootTheme.ToString();
         var item = themeComboBox.Items.Cast<ComboBoxItem>().FirstOrDefault(c => c?.Tag?.ToString() == currentTheme);
         themeComboBox.SelectedItem = item;
+    }
+
+    /// <summary>
+    /// Event handler for when the selection is changed in a combobox.
+    /// </summary>
+    /// <param name="sender">The object that raised the event.</param>
+    /// <remarks>
+    /// This method is an event handler for when the selection is changed in a combobox. It takes the sender object as a parameter and performs the required actions based on the selected item in the combobox.
+    /// </remarks>
+    public void OnBackdropComboBoxSelectionChanged(object sender)
+    {
+        var cmb = (ComboBox)sender;
+        var selectedBackdrop = (cmb?.SelectedItem as ComboBoxItem)?.Tag?.ToString();
+        if (selectedBackdrop != null)
+        {
+            var backdrop = GeneralHelper.GetEnum<BackdropType>(selectedBackdrop);
+            SetSystemBackdrop(backdrop);
+        }
+    }
+
+    /// <summary>
+    /// Sets the default item for the specified combobox.
+    /// </summary>
+    /// <param name="backdropComboBox">The combobox to set the default item for.</param>
+    /// <remarks>
+    /// This method sets the default item for the specified combobox. It is typically used to ensure that one of the items in the combobox is selected by default when the combo box is displayed to the user.
+    /// </remarks>
+    public void SetBackdropComboBoxDefaultItem(ComboBox backdropComboBox)
+    {
+        var currentBackdrop = GetSystemBackdrop().ToString();
+        var item = backdropComboBox.Items.Cast<ComboBoxItem>().FirstOrDefault(c => c?.Tag?.ToString() == currentBackdrop);
+        backdropComboBox.SelectedItem = item;
     }
 }

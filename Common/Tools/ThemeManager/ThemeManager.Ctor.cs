@@ -1,4 +1,6 @@
-﻿namespace WinUICommunity.Common.Tools
+﻿using WinUICommunity.Common.Internal;
+
+namespace WinUICommunity.Common.Tools
 {
     public partial class ThemeManager
     {
@@ -36,24 +38,11 @@
                 element.ActualThemeChanged += OnActualThemeChanged;
             }
 
-            string savedTheme = string.Empty;
-
-            if (ApplicationHelper.IsPackaged)
-            {
-                savedTheme = ApplicationData.Current.LocalSettings.Values[SelectedAppThemeKey]?.ToString();
-            }
-            else
-            {
-                savedTheme = Internal.UnPackagedSetting.ReadTheme();
-            }
-            if (savedTheme != null)
-            {
-                RootTheme = GeneralHelper.GetEnum<ElementTheme>(savedTheme);
-            }
+            RootTheme = CommonSettings.Settings.ElementTheme;
             UpdateSystemCaptionButtonColors();
         }
 
-        private void InternalInitializeSystemBackdrops(Window window, BackdropType backdropType)
+        private void InternalInitializeSystemBackdrops(Window window, BackdropType backdropType, bool forceBackdrop)
         {
             CurrentApplicationWindow = window;
             InternalInitialize();
@@ -62,14 +51,27 @@
             {
                 var _backdropsHelper = new SystemBackdropsHelper(_window);
                 systemBackdropsHelperDic.Add(_window, _backdropsHelper);
-                _backdropsHelper.SetBackdrop(backdropType);
+                _backdropsHelper.SetBackdrop(LoadCurrentSystemBackdrop(backdropType, forceBackdrop));
             }
 
             if (CurrentApplicationWindow != null)
             {
                 var backdropsHelper = new SystemBackdropsHelper(CurrentApplicationWindow);
                 systemBackdropsHelper = backdropsHelper;
-                backdropsHelper.SetBackdrop(backdropType);
+                backdropsHelper.SetBackdrop(LoadCurrentSystemBackdrop(backdropType, forceBackdrop));
+            }
+        }
+
+        private BackdropType LoadCurrentSystemBackdrop(BackdropType backdropType, bool ForceBackdrop)
+        {
+            var currentBackdrop = CommonSettings.Settings.BackdropType;
+            if (ForceBackdrop)
+            {
+                return backdropType;
+            }
+            else
+            {
+                return currentBackdrop;
             }
         }
 
@@ -209,31 +211,33 @@
         /// </summary>
         /// <param name="window">The window to apply the backdrop type to.</param>
         /// <param name="backdropType">The initial backdrop type to apply to the window.</param>
+        /// <param name="forceBackdrop">force backdrop type, saved backdrop will be ignored.</param>
         /// <remarks>
         /// This constructor creates a new instance of the ThemeManager class with the specified window and initial backdrop type. The ThemeManager is used to manage the application's theme and UI settings, and can be used to apply themes to specific windows or to the entire application. The specified window is used as the target for backdrop type changes and updates, and the specified backdrop type is applied as the initial backdrop type for the window. 
         /// </remarks>
-        public ThemeManager(Window window, BackdropType backdropType)
+        public ThemeManager(Window window, BackdropType backdropType, bool forceBackdrop = false)
         {
-            InternalInitializeSystemBackdrops(window, backdropType);
+            InternalInitializeSystemBackdrops(window, backdropType, forceBackdrop);
         }
 
         /// <summary>
         /// Initializes the ThemeManager instance with the specified backdrop type.
         /// </summary>
         /// <param name="backdropType">The initial backdrop type to apply to the application.</param>
+        /// <param name="forceBackdrop">force backdrop type, saved backdrop will be ignored.</param>
         /// <returns>The initialized ThemeManager instance.</returns>
         /// <remarks>
         /// This method initializes the ThemeManager instance with the specified initial backdrop type and returns it. The ThemeManager is used to manage the application's theme and UI settings, and can be used to apply themes to specific windows or to the entire application. The specified backdrop type is applied as the initial backdrop type for the application. The Initialize method must be called before the ThemeManager can be used to change themes or perform other operations related to the application's visual style and appearance. 
         /// </remarks>
-        public static ThemeManager Initialize(BackdropType backdropType)
+        public static ThemeManager Initialize(BackdropType backdropType, bool forceBackdrop = false)
         {
             if (Instance == null)
             {
-                instance = new ThemeManager(null, backdropType);
+                instance = new ThemeManager(null, backdropType, forceBackdrop);
             }
             else
             {
-                instance.InternalInitializeSystemBackdrops(null, backdropType);
+                instance.InternalInitializeSystemBackdrops(null, backdropType, forceBackdrop);
             }
             return Instance;
         }
@@ -243,19 +247,20 @@
         /// </summary>
         /// <param name="window">The window to apply the backdrop type to.</param>
         /// <param name="backdropType">The initial backdrop type to apply to the window.</param>
+        /// <param name="forceBackdrop">force backdrop type, saved backdrop will be ignored.</param>
         /// <returns>The initialized ThemeManager instance.</returns>
         /// <remarks>
         /// This method initializes the ThemeManager instance with the specified window and initial backdrop type, and returns it. The ThemeManager is used to manage the application's theme and UI settings, and can be used to apply themes to specific windows or to the entire application. The specified window is used as the target for backdrop type changes and updates, and the specified backdrop type is applied as the initial backdrop type for the window. The Initialize method must be called before the ThemeManager can be used to change themes or perform other operations related to the application's visual style and appearance. 
         /// </remarks>
-        public static ThemeManager Initialize(Window window, BackdropType backdropType)
+        public static ThemeManager Initialize(Window window, BackdropType backdropType, bool forceBackdrop = false)
         {
             if (Instance == null)
             {
-                instance = new ThemeManager(window, backdropType);
+                instance = new ThemeManager(window, backdropType, forceBackdrop);
             }
             else
             {
-                instance.InternalInitializeSystemBackdrops(window, backdropType);
+                instance.InternalInitializeSystemBackdrops(window, backdropType, forceBackdrop);
             }
             return Instance;
         }
@@ -264,9 +269,9 @@
 
         #region Initialize Window/ElementTheme/BackdropType
 
-        private void InternalInitialize(Window window, ElementTheme theme, BackdropType backdropType)
+        private void InternalInitialize(Window window, ElementTheme theme, BackdropType backdropType, bool forceBackdrop)
         {
-            InternalInitializeSystemBackdrops(window, backdropType);
+            InternalInitializeSystemBackdrops(window, backdropType, forceBackdrop);
             ChangeTheme(theme);
         }
 
@@ -276,12 +281,13 @@
         /// <param name="window">The window to apply the theme and backdrop type to.</param>
         /// <param name="theme">The initial theme to apply to the window.</param>
         /// <param name="backdropType">The initial backdrop type to apply to the window.</param>
+        /// <param name="forceBackdrop">force backdrop type, saved backdrop will be ignored.</param>
         /// <remarks>
         /// This method initializes the ThemeManager instance with the specified window, initial theme, and initial backdrop type. The ThemeManager is used to manage the application's theme and UI settings, and can be used to apply themes to specific windows or to the entire application. The specified window is used as the target for theme and backdrop type changes and updates, and the specified theme and backdrop type are applied as the initial theme and backdrop type for the window. The Initialize method must be called before the ThemeManager can be used to change themes or perform other operations related to the application's visual style and appearance. 
         /// </remarks>
-        public ThemeManager(Window window, ElementTheme theme, BackdropType backdropType)
+        public ThemeManager(Window window, ElementTheme theme, BackdropType backdropType, bool forceBackdrop = false)
         {
-            InternalInitialize(window, theme, backdropType);
+            InternalInitialize(window, theme, backdropType, forceBackdrop);
         }
 
         /// <summary>
@@ -289,19 +295,20 @@
         /// </summary>
         /// <param name="theme">The initial theme to apply to the window.</param>
         /// <param name="backdropType">The initial backdrop type to apply to the window.</param>
+        /// <param name="forceBackdrop">force backdrop type, saved backdrop will be ignored.</param>
         /// <returns>The initialized ThemeManager instance.</returns>
         /// <remarks>
         /// This method initializes the ThemeManager instance with the specified initial theme and initial backdrop type, and returns it. The ThemeManager is used to manage the application's theme and UI settings, and can be used to apply themes to specific windows or to the entire application. The specified theme and backdrop type are applied as the initial theme and backdrop type for the entire application. The Initialize method must be called before the ThemeManager can be used to change themes or perform other operations related to the application's visual style and appearance. 
         /// </remarks>
-        public static ThemeManager Initialize(ElementTheme theme, BackdropType backdropType)
+        public static ThemeManager Initialize(ElementTheme theme, BackdropType backdropType, bool forceBackdrop = false)
         {
             if (Instance == null)
             {
-                instance = new ThemeManager(null, theme, backdropType);
+                instance = new ThemeManager(null, theme, backdropType, forceBackdrop);
             }
             else
             {
-                instance.InternalInitialize(null, theme, backdropType);
+                instance.InternalInitialize(null, theme, backdropType, forceBackdrop);
             }
             return Instance;
         }
@@ -312,19 +319,20 @@
         /// <param name="window">The window to apply the theme and backdrop type to.</param>
         /// <param name="theme">The initial theme to apply to the window.</param>
         /// <param name="backdropType">The initial backdrop type to apply to the window.</param>
+        /// <param name="forceBackdrop">force backdrop type, saved backdrop will be ignored.</param>
         /// <returns>The initialized ThemeManager instance.</returns>
         /// <remarks>
         /// This method initializes the ThemeManager instance with the specified window, initial theme, and initial backdrop type, and returns it. The ThemeManager is used to manage the application's theme and UI settings, and can be used to apply themes to specific windows or to the entire application. The specified window is used as the target for theme and backdrop type changes and updates, and the specified theme and backdrop type are applied as the initial theme and backdrop type for the window. The Initialize method must be called before the ThemeManager can be used to change themes or perform other operations related to the application's visual style and appearance. 
         /// </remarks>
-        public static ThemeManager Initialize(Window window, ElementTheme theme, BackdropType backdropType)
+        public static ThemeManager Initialize(Window window, ElementTheme theme, BackdropType backdropType, bool forceBackdrop = false)
         {
             if (Instance == null)
             {
-                instance = new ThemeManager(window, theme, backdropType);
+                instance = new ThemeManager(window, theme, backdropType, forceBackdrop);
             }
             else
             {
-                instance.InternalInitialize(window, theme, backdropType);
+                instance.InternalInitialize(window, theme, backdropType, forceBackdrop);
             }
             return Instance;
         }
