@@ -53,5 +53,17 @@ public static class ApplicationHelper
     {
         return Application.Current.GetType().Assembly.GetName().Version.ToString();
     }
+
+    public static string GetLocalFolderPath()
+    {
+        if (IsPackaged)
+        {
+            return ApplicationData.Current.LocalFolder.Path;
+        }
+        else
+        {
+            return Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+        }
+    }
 }
 

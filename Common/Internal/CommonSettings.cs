@@ -7,11 +7,11 @@ namespace WinUICommunity.Common.Internal;
 internal class CommonSettings : JsonSettings, IVersionable
 {
     public static readonly string AppName = ApplicationHelper.GetProjectNameAndVersion();
-    public static readonly string RootPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), AppName);
+    public static readonly string RootPath = Path.Combine(ApplicationHelper.GetLocalFolderPath(), AppName);
     public static readonly string AppConfigPath = Path.Combine(RootPath, "CommonAppConfig.json");
 
-    [EnforcedVersion("1.1.0.0")]
-    public Version Version { get; set; } = new Version(1, 1, 0, 0);
+    [EnforcedVersion("3.0.0.0")]
+    public Version Version { get; set; } = new Version(3, 0, 0, 0);
     public override string FileName { get; set; } = AppConfigPath;
 
     
