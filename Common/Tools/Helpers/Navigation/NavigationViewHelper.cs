@@ -162,7 +162,15 @@ public class NavigationViewHelper
             Type pageType = null;
             if (selectedItem is ControlInfoDataItem)
             {
-                Assembly assembly = Assembly.Load(item.ApiNamespace);
+                Assembly assembly;
+                if (string.IsNullOrEmpty(item.ApiNamespace))
+                {
+                    assembly = Application.Current.GetType().Assembly;
+                }
+                else
+                {
+                    assembly = Assembly.Load(item.ApiNamespace);
+                }
                 if (assembly is not null)
                 {
                     pageType = assembly.GetType(item.UniqueId);
@@ -170,7 +178,15 @@ public class NavigationViewHelper
             }
             else
             {
-                Assembly assembly = Assembly.Load(itemGroup.ApiNamespace);
+                Assembly assembly;
+                if (string.IsNullOrEmpty(itemGroup.ApiNamespace))
+                {
+                    assembly = Application.Current.GetType().Assembly;
+                }
+                else
+                {
+                    assembly = Assembly.Load(itemGroup.ApiNamespace);
+                }
                 if (assembly is not null)
                 {
                     pageType = assembly.GetType(itemGroup.UniqueId);
@@ -190,7 +206,15 @@ public class NavigationViewHelper
             var itemGroup = selectedItem as ControlInfoDataGroup;
             if (selectedItem is ControlInfoDataItem)
             {
-                Assembly assembly = Assembly.Load(item.ApiNamespace);
+                Assembly assembly;
+                if (string.IsNullOrEmpty(item.ApiNamespace))
+                {
+                    assembly = Application.Current.GetType().Assembly;
+                }
+                else
+                {
+                    assembly = Assembly.Load(item.ApiNamespace);
+                }
                 if (assembly is not null)
                 {
                     Type pageType = assembly.GetType(item.UniqueId);
@@ -241,7 +265,15 @@ public class NavigationViewHelper
             {
                 string pageString = infoDataItem.UniqueId;
                 Type page = null;
-                Assembly assembly = Assembly.Load(infoDataItem.ApiNamespace);
+                Assembly assembly;
+                if (string.IsNullOrEmpty(infoDataItem.ApiNamespace))
+                {
+                    assembly = Application.Current.GetType().Assembly;
+                }
+                else
+                {
+                    assembly = Assembly.Load(infoDataItem.ApiNamespace);
+                }
                 if (assembly is not null)
                 {
                     page = assembly.GetType(pageString);
